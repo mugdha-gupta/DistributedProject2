@@ -10,33 +10,43 @@ import java.util.concurrent.CyclicBarrier;
 
 class MyThread extends Thread {
 
-    public CyclicBarrier barrier;
-    public CyclicBarrier done;
-    public CountDownLatch leaderFoundLatch;
 
-    public PipedInputStream inputStream;
-    public PipedOutputStream outputStream;
-
-    public int myId;
+    public int id;
     public int maxIdFound;
     int parent;
-    ArrayList<Integer> children;
+    ArrayList<Integer> neighbors;
+    int responseCounter = 0;
 
-    public MyThread(CyclicBarrier my_b, CyclicBarrier my_done, CountDownLatch my_latch, PipedInputStream my_instream, PipedOutputStream my_outstream, int my_id) {
+    public MyThread(int my_id, ArrayList<Integer> my_neighbors) {
         //initialize our class variables
-        barrier = my_b;
-        done = my_done;
-        leaderFoundLatch = my_latch;
-        inputStream = my_instream;
-        outputStream = my_outstream;
-        myId = my_id;
+
+        id = my_id;
         maxIdFound = my_id;
+        parent = -1;
+        neighbors = my_neighbors;
+
 
         //start from within constructor so main thread never has to call it
         start();
     }
 
     public void run()  {
+        initialize();
+        receiveMessages();
+        processMessages();
+
+    }
+
+    public void initialize(){
+        System.out.println("initializing");
+
+    }
+    public void receiveMessages(){
+        System.out.println("receiving");
+
+    }
+    public void processMessages(){
+        System.out.println("processing");
 
     }
 
