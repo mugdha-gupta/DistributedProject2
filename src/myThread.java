@@ -19,7 +19,7 @@ class MyThread extends Thread {
 
     public int myId;
     public int maxIdFound;
-    int parent;
+    public int parent;
     ArrayList<Integer> children;
 
     public MyThread(CyclicBarrier my_b, CyclicBarrier my_done, CountDownLatch my_latch, PipedInputStream my_instream, PipedOutputStream my_outstream, int my_id) {
