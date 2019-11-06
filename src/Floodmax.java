@@ -11,7 +11,7 @@ public class Floodmax {
     public static void main(String[] args) {
         HashMap<Integer, ArrayList<Integer>> neighbors;
 
-        File file = new File("C:\\Users\\Nymisha\\IdeaProjects\\DistributedProject2\\src\\input.dat");
+        File file = new File("C:\\Users\\mugdh\\gitviews\\DistributedProject2\\src\\input.dat");
         try {
             processInputFile(file);
 
@@ -93,7 +93,6 @@ public class Floodmax {
             toAdd.clear();
             dist++;
         }
-        System.out.println(id + " " + dist);
         return dist;
     }
 
