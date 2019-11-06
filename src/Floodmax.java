@@ -49,7 +49,7 @@ public class Floodmax {
             return null;
         }
 
-        CyclicBarrier barrier = new CyclicBarrier(numThreads+1);
+        CyclicBarrier barrier = new CyclicBarrier(numThreads);
         HashMap<Integer, ArrayList<Integer>> neighborMap = new HashMap<>();
         int[] threadIDs = new int[numThreads];
         for (int i = 0; i < numThreads; i++) {
