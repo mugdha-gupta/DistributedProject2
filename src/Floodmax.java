@@ -13,8 +13,7 @@ public class Floodmax {
 
         File file = new File("C:\\Users\\mugdh\\gitviews\\DistributedProject2\\src\\input.dat");
         try {
-            neighbors = processInputFile(file);
-            diam = dfs();
+            processInputFile(file);
 
 
         } catch (IOException ex) {
@@ -63,21 +62,39 @@ public class Floodmax {
         System.out.println(neighborMap.toString());
         createConnections(neighborMap, threadIDs, numThreads, barrier);
 
-        maxCount = Integer.MIN_VALUE;
-
-        int start = 0;
-        for (int key : neighborMap.keySet())
-        {
-            start = key;
-            break;
-        }
-
-        dfs(start, numThreads, neighborMap.get(start));
-
-        dfs(x, numThreads, neighborMap.get(x));
-        System.out.println("diam " + maxCount);
+//
+//        maxCount = Integer.MIN_VALUE;
+//
+//        int start = 0;
+//        for (int key : neighborMap.keySet())
+//        {
+//            start = key;
+//            break;
+//        }
+//
+//        dfs(start, numThreads, neighborMap.get(start));
+//
+//        dfs(x, numThreads, neighborMap.get(x));
+//        System.out.println("diam " + maxCount);
         return neighborMap;
     }
+
+    static int findDiameter(HashMap<Integer, ArrayList<Integer>> neighborhood){
+        int diameter =0;
+        for(int id : neighborhood.keySet()){
+            int longestPath = getLongest(id, neighborhood);
+            if(longestPath > diameter)
+                diameter =longestPath;
+        }
+        return diameter;
+    }
+
+    static int getLongest(int id, HashMap<Integer, ArrayList<Integer>> neighborhood){
+        HashSet<Integer> ids = new HashSet<>();
+        for()
+        return 0;
+    }
+
 
     static int dfs(ArrayList<Integer> neighbors){
 
@@ -119,32 +136,32 @@ public class Floodmax {
     }
     static void dfs(int node, int n, ArrayList<Integer> neighbors)
     {
-        boolean[] visited = new boolean[n + 1];
+        HashMap<Integer, Boolean> visited = new HashMap<Integer, Boolean>();
         int count = 0;
 
         // Mark all the vertices as not visited
-        Arrays.fill(visited, false);
+//        for(int thread : threadIDs)
 
         // Increment count by 1 for visited node
-        dfsUtil(node, count + 1, visited, neighbors);
+        //dfsUtil(node, count + 1, visited, neighbors);
 
     }
-    static void dfsUtil(int node, int count, boolean visited[], ArrayList<Integer> neighbors)
-    {
-        visited[node] = true;
-        count++;
-
-        for(int neighbor: neighbors)
-        {
-            if(!visited[neighbor]){
-                if (count >= maxCount) {
-                    maxCount = count;
-                    x = neighbor;
-                }
-                dfsUtil(neighbor, count, visited, neighbors);
-            }
-        }
-    }
+//    static void dfsUtil(int node, int count, HashMap<Integer, Boolean> visited, ArrayList<Integer> neighbors)
+//    {
+//        visited[node] = true;
+//        count++;
+//
+//        for(int neighbor: neighbors)
+//        {
+//            if(!visited[neighbor]){
+//                if (count >= maxCount) {
+//                    maxCount = count;
+//                    x = neighbor;
+//                }
+//                dfsUtil(neighbor, count, visited, neighbors);
+//            }
+//        }
+//    }
 }
 
 
