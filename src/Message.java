@@ -2,7 +2,7 @@ import java.util.Random;
 
 public class Message {
 
-    int id;
+    int senderid;
     int maxIdFound;
     int type;
     int transmissionTime;
@@ -12,7 +12,7 @@ public class Message {
     final int DECLINE = 2;
 
     public Message(int id, int maxId, int type) {
-        this.id = id;
+        this.senderid = id;
         this.maxIdFound = maxId;
         this.type = type;
 
