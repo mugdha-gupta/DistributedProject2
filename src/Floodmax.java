@@ -1,3 +1,6 @@
+//Nymisha Jahagirdar and Mugdha Gupta
+//CS 6380 Project 2
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
@@ -12,11 +15,17 @@ public class Floodmax {
         int diameter;
         Thread[] threads;
 
-        File file = new File("C:\\Users\\mugdh\\gitviews\\DistributedProject2\\src\\input.dat");
+        //input processing
+        if(args.length < 1){
+            System.out.println("No path for the input file given.");
+            return;
+        }
+
+        File file = new File(args[0]);
         neighborhood = getNeighborhood(file); //get the neighbor map
         diameter = findDiameter(neighborhood); //get the diameter from the neigbor map
         connections = createConnections(neighborhood); //get connections map from neighbor map
-        threads = initializeThreads(connections, diameter); //initialize all threads
+        initializeThreads(connections, diameter); //initialize all threads
 
     }
 
@@ -101,7 +110,7 @@ public class Floodmax {
     }
 
     //initialize all the threads
-    static Thread[] initializeThreads(HashMap<Integer, ArrayList<Connection>> connections, int diameter){
+    static void initializeThreads(HashMap<Integer, ArrayList<Connection>> connections, int diameter){
         int numThreads = connections.keySet().size();
         Thread[] threads = new Thread[numThreads];
         CyclicBarrier barrier = new CyclicBarrier(numThreads); //create cyclic barrier to syncronize rounds
