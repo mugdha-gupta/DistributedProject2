@@ -1,5 +1,6 @@
 
 import java.util.*;
+import java.util.concurrent.CyclicBarrier;
 
 class MyThread extends Thread {
 
@@ -8,6 +9,7 @@ class MyThread extends Thread {
     public final int DECLINE = 2;
 
 
+    public CyclicBarrier barrier;
     public int myId;
     public int maxIdFound;
     public int parent;
@@ -15,13 +17,14 @@ class MyThread extends Thread {
     public int responseCounter = 0;
     public HashMap<Connection, Message> recievedMessages;
 
-    public MyThread(int my_id, ArrayList<Connection> my_neighbors) {
+    public MyThread(int my_id, ArrayList<Connection> my_neighbors, CyclicBarrier my_barrier) {
         //initialize our class variables
         myId = my_id;
         maxIdFound = my_id;
         parent = -1;
         connections = my_neighbors;
         recievedMessages = new HashMap<>();
+        barrier = my_barrier;
 
         //start from within constructor so main thread never has to call it
         start();
@@ -55,6 +58,7 @@ class MyThread extends Thread {
                 if (maxIdFound < message.maxIdFound){
                     setParent(message.senderid, connection);
                     sendMessages(new Message(myId, parent, INIT));
+                    responseCounter = 0;
                 }
                 else {
                     sendResponse(new Message(myId, maxIdFound, DECLINE), message.senderid);
@@ -68,9 +72,6 @@ class MyThread extends Thread {
             }
             else if (message.type == DECLINE){
                 responseCounter++;
-//                if (maxIdFound == message.maxIdFound) {
-//                    responseCounter++;
-//                }
 
             }
             else{

@@ -1,30 +1,33 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Scanner;
-import java.util.HashMap;
+import java.util.*;
+import java.util.concurrent.CyclicBarrier;
 
 public class Floodmax {
+
+    static int maxCount, x;
 
     public static void main(String[] args) {
         HashMap<Integer, ArrayList<Integer>> neighbors;
         int diam = 0;
 
-        File file = new File("C:\\Users\\mugdh\\gitviews\\DistributedProject2\\src\\input.dat");
+        File file = new File("C:\\Users\\Nymisha\\IdeaProjects\\DistributedProject2\\src\\input.dat");
         try {
             neighbors = processInputFile(file);
-            for (int start : neighbors.keySet()) {
+//            for (int start : neighbors.keySet()) {
+//
+//                int newDiam = dfs(neighbors.get(start));
+//                if (newDiam > diam)
+//                    diam = newDiam;
+//            }
 
-                int newDiam = dfs(neighbors.get(start));
-                if (newDiam > diam)
-                    diam = newDiam;
-            }
+
 
         } catch (IOException ex) {
             System.err.println(ex);
         }
+
 
 
     }
@@ -46,6 +49,7 @@ public class Floodmax {
             return null;
         }
 
+        CyclicBarrier barrier = new CyclicBarrier(numThreads+1);
         HashMap<Integer, ArrayList<Integer>> neighborMap = new HashMap<>();
         int[] threadIDs = new int[numThreads];
         for (int i = 0; i < numThreads; i++) {
@@ -65,6 +69,20 @@ public class Floodmax {
         }
         System.out.println(neighborMap.toString());
         createConnections(neighborMap, threadIDs, numThreads);
+
+        maxCount = Integer.MIN_VALUE;
+
+        int start = 0;
+        for (int key : neighborMap.keySet())
+        {
+            start = key;
+            break;
+        }
+
+        dfs(start, numThreads, neighborMap.get(start));
+
+        dfs(x, numThreads, neighborMap.get(x));
+        System.out.println("diam " + maxCount);
         return neighborMap;
     }
 
@@ -80,20 +98,20 @@ public class Floodmax {
         }
     }
 
-    static void createConnections(HashMap<Integer, ArrayList<Integer>> neighborhood, int[] threadIDs, int numThreads){
+    static void createConnections(HashMap<Integer, ArrayList<Integer>> neighborhood, int[] threadIDs, int numThreads) {
         HashMap<Integer, ArrayList<Connection>> connections = new HashMap<>();
-        for(int id : threadIDs){
+        for (int id : threadIDs) {
             ArrayList<Integer> neighbors = neighborhood.get(id);
-            for(int neighbor : neighbors){
-                if(id < neighbor){
+            for (int neighbor : neighbors) {
+                if (id < neighbor) {
                     Connection connection = new Connection(id, neighbor);
                     ArrayList<Connection> myConnections;
-                    if(connections.containsKey(id))
+                    if (connections.containsKey(id))
                         myConnections = connections.get(id);
                     else
                         myConnections = new ArrayList<>();
                     ArrayList<Connection> neighborConnections;
-                    if(connections.containsKey(neighbor))
+                    if (connections.containsKey(neighbor))
                         neighborConnections = connections.get(neighbor);
                     else
                         neighborConnections = new ArrayList<>();
@@ -105,6 +123,34 @@ public class Floodmax {
             }
         }
         initializeThreads(numThreads, threadIDs, connections);
+    }
+    static void dfs(int node, int n, ArrayList<Integer> neighbors)
+    {
+        boolean[] visited = new boolean[n + 1];
+        int count = 0;
+
+        // Mark all the vertices as not visited
+        Arrays.fill(visited, false);
+
+        // Increment count by 1 for visited node
+        dfsUtil(node, count + 1, visited, neighbors);
+
+    }
+    static void dfsUtil(int node, int count, boolean visited[], ArrayList<Integer> neighbors)
+    {
+        visited[node] = true;
+        count++;
+
+        for(int neighbor: neighbors)
+        {
+            if(!visited[neighbor]){
+                if (count >= maxCount) {
+                    maxCount = count;
+                    x = neighbor;
+                }
+                dfsUtil(neighbor, count, visited, neighbors);
+            }
+        }
     }
 }
 
