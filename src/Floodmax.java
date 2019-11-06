@@ -3,6 +3,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Floodmax {
 
@@ -108,11 +109,13 @@ public class Floodmax {
 
     static void createConnections(HashMap<Integer, ArrayList<Integer>> neighborhood, int[] threadIDs, int numThreads, CyclicBarrier barrier) {
         HashMap<Integer, ArrayList<Connection>> connections = new HashMap<>();
+        AtomicInteger counter = new AtomicInteger();
+
         for (int id : threadIDs) {
             ArrayList<Integer> neighbors = neighborhood.get(id);
             for (int neighbor : neighbors) {
                 if (id < neighbor) {
-                    Connection connection = new Connection(id, neighbor);
+                    Connection connection = new Connection(id, neighbor,  counter);
                     ArrayList<Connection> myConnections;
                     if (connections.containsKey(id))
                         myConnections = connections.get(id);

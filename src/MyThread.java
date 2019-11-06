@@ -3,6 +3,7 @@ import java.util.*;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class MyThread extends Thread {
 
@@ -93,6 +94,7 @@ class MyThread extends Thread {
                         setParent(message.senderid, connection);
                     }
                     else {
+                        if(connection != null)
                         sendResponse(new Message(myId, maxIdFound, DECLINE), connection);
                     }
 
@@ -114,6 +116,7 @@ class MyThread extends Thread {
         }
         responseCounter = 0;
         messagesSent = 0;
+        if(parentConnection != null)
         sendResponse(new Message(myId, maxIdFound, ACCEPT), parentConnection);
 
     }
@@ -141,13 +144,16 @@ class MyThread extends Thread {
     }
 
     public void sendResponse(Message message, Connection connection){
-        if(connection != null)
+        if(connection != null){
             connection.sendMessage(myId, message);
+        }
     }
 
     public void setParent(int parentId, Connection connection){
-        if(parentId != -1)
+        if(parent != -1){
+            if(parentConnection != null)
             sendResponse(new Message(myId, maxIdFound, DECLINE), parentConnection);
+        }
         parent = parentId;
         parentConnection = connection;
         for(Connection conn : connections){

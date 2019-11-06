@@ -4,13 +4,15 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Connection {
     private HashMap<Integer, Queue<Message>> input = new HashMap<>();
     private HashMap<Integer, Queue<Message>> output = new HashMap<>();
     private int idHasParentConnection = -1;
+    private AtomicInteger counter;
 
-    public Connection(int processId1, int processId2){
+    public Connection(int processId1, int processId2, AtomicInteger counter){
         Queue<Message> queue1 = new LinkedList<>();
         input.put(processId1, queue1);
         output.put(processId2, queue1);
@@ -19,6 +21,7 @@ public class Connection {
         input.put(processId2, queue2);
         output.put(processId1, queue2);
 
+        this.counter = counter;
     }
 
     public void sendMessage(int myId, Message message){
@@ -30,6 +33,8 @@ public class Connection {
             e.printStackTrace();
         }
         output.get(myId).add(message);
+        System.out.println(counter.incrementAndGet());
+
     }
 
     public Message getMessage(int myId){
