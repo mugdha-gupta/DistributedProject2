@@ -9,6 +9,8 @@ import java.util.Queue;
 public class Connection {
     private HashMap<Integer, Queue<Message>> input = new HashMap<>();
     private HashMap<Integer, Queue<Message>> output = new HashMap<>();
+    private HashMap<Integer, Integer> neighborId;
+
     public Connection(int processId1, int processId2){
         Queue<Message> queue1 = new LinkedList<>();
         input.put(processId1, queue1);
@@ -25,5 +27,16 @@ public class Connection {
 
     public Message getMessage(int myId){
         return input.get(myId).poll();
+    }
+
+    public int getNeighborId(int myId){
+        if(neighborId.containsKey(myId))
+            return neighborId.get(myId);
+        else
+            return -1;
+    }
+
+    public void setNeighborId(int myId, int nId){
+        neighborId.put(myId, nId);
     }
 }

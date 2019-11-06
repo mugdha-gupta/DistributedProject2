@@ -83,7 +83,9 @@ class MyThread extends Thread {
 
     public void sendMessages(Message message){
         System.out.println("send messages to neighbors here");
-
+        for(Connection connection : connections){
+            connection.sendMessage(myId, message);
+        }
     }
 
     public void sendResponse(Message message, int parent){
