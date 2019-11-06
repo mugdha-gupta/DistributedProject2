@@ -9,7 +9,7 @@ public class Floodmax {
 
     public static void main(String[] args) {
         HashMap<Integer, ArrayList<Integer>> neighbors;
-        File file = new File("C:\\Users\\mugdh\\Downloads\\Distributed2\\Distributed2\\src\\input.dat");
+        File file = new File("C:\\Users\\Nymisha\\IdeaProjects\\DistributedProject2\\src\\input.dat");
         try {
             neighbors = processInputFile(file);
         } catch (IOException ex) {
@@ -40,7 +40,7 @@ public class Floodmax {
         int[] threadIDs = new int[numThreads];
         for (int i = 0; i < numThreads; i++) {
             threadIDs[i] = sc.nextInt();
-            neighborMap.put(threadIDs[i], new ArrayList<Integer>());
+            neighborMap.put(threadIDs[i], new ArrayList<>());
         }
 
         for (int i = 0; i < numThreads; i++) {
@@ -52,6 +52,11 @@ public class Floodmax {
                     neighborMap.put(threadIDs[i], friends);
                 }
             }
+        }
+
+        Thread[] threads = new Thread[numThreads];
+        for(int i = 0; i < numThreads; i++){
+            threads[i] = new MyThread(threadIDs[i], neighborMap.get(threadIDs[i]));
         }
         System.out.println(neighborMap.toString());
         return neighborMap;
