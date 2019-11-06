@@ -1,0 +1,6 @@
+Thread: 4	Leader found: 25
+Thread: 10	Leader found: 25
+Thread: 3	Leader found: 25
+Thread: 19	Leader found: 25
+Thread: 7	Leader found: 25
+Thread: 25	Leader found: 25

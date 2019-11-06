@@ -1,3 +1,6 @@
+//Nymisha Jahagirdar and Mugdha Gupta
+//CS 6380 Project 2
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -12,7 +15,13 @@ public class Floodmax {
     public static void main(String[] args) {
         HashMap<Integer, ArrayList<Integer>> neighbors;
 
-        File file = new File("C:\\Users\\mugdh\\gitviews\\DistributedProject2\\src\\input.dat");
+        //input processing
+        if(args.length < 1){
+            System.out.println("No path for the input file given.");
+            return;
+        }
+
+        File file = new File(args[0]);
         try {
             processInputFile(file);
 
