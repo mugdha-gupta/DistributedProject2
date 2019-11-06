@@ -12,7 +12,7 @@ public class Floodmax {
         HashMap<Integer, ArrayList<Integer>> neighbors;
         int diam = 0;
 
-        File file = new File("C:\\Users\\Nymisha\\IdeaProjects\\DistributedProject2\\src\\input.dat");
+        File file = new File("C:\\Users\\mugdh\\gitviews\\DistributedProject2\\src\\input.dat");
         try {
             neighbors = processInputFile(file);
 //            for (int start : neighbors.keySet()) {
@@ -68,7 +68,7 @@ public class Floodmax {
             }
         }
         System.out.println(neighborMap.toString());
-        createConnections(neighborMap, threadIDs, numThreads);
+        createConnections(neighborMap, threadIDs, numThreads, barrier);
 
         maxCount = Integer.MIN_VALUE;
 
@@ -91,14 +91,14 @@ public class Floodmax {
         return 1;
     }
 
-    static void initializeThreads(int numThreads, int[] threadIDs, HashMap<Integer, ArrayList<Connection>> connections){
+    static void initializeThreads(int numThreads, int[] threadIDs, HashMap<Integer, ArrayList<Connection>> connections, CyclicBarrier barrier){
         Thread[] threads = new Thread[numThreads];
         for(int i = 0; i < numThreads; i++){
-            threads[i] = new MyThread(threadIDs[i], connections.get(threadIDs[i]));
+            threads[i] = new MyThread(threadIDs[i], connections.get(threadIDs[i]), barrier);
         }
     }
 
-    static void createConnections(HashMap<Integer, ArrayList<Integer>> neighborhood, int[] threadIDs, int numThreads) {
+    static void createConnections(HashMap<Integer, ArrayList<Integer>> neighborhood, int[] threadIDs, int numThreads, CyclicBarrier barrier) {
         HashMap<Integer, ArrayList<Connection>> connections = new HashMap<>();
         for (int id : threadIDs) {
             ArrayList<Integer> neighbors = neighborhood.get(id);
@@ -122,7 +122,7 @@ public class Floodmax {
                 }
             }
         }
-        initializeThreads(numThreads, threadIDs, connections);
+        initializeThreads(numThreads, threadIDs, connections, barrier);
     }
     static void dfs(int node, int n, ArrayList<Integer> neighbors)
     {

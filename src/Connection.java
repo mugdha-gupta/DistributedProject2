@@ -2,10 +2,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class Connection {
     private HashMap<Integer, Queue<Message>> input = new HashMap<>();
@@ -24,6 +22,13 @@ public class Connection {
     }
 
     public void sendMessage(int myId, Message message){
+        Random rand = new Random();
+        int transmissionTime =   rand.nextInt(10)+1;
+        try {
+            TimeUnit.MILLISECONDS.sleep(transmissionTime);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         output.get(myId).add(message);
     }
 

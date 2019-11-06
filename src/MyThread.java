@@ -1,5 +1,6 @@
 
 import java.util.*;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 class MyThread extends Thread {
@@ -31,9 +32,18 @@ class MyThread extends Thread {
     }
 
     public void run()  {
-        initialize();
         receiveMessages();
         processMessages();
+        initialize();
+        try {
+            barrier.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (BrokenBarrierException e) {
+            e.printStackTrace();
+        }
+        if(barrier.isBroken())
+            barrier.reset();
 
     }
 
@@ -55,6 +65,7 @@ class MyThread extends Thread {
         {
             Message message = recievedMessages.get(connection);
             if (message.type == INIT) {
+//                System.out.println("init " + myId + " " + message.senderid );
                 if (maxIdFound < message.maxIdFound){
                     setParent(message.senderid, connection);
                     sendMessages(new Message(myId, parent, INIT));
@@ -67,10 +78,14 @@ class MyThread extends Thread {
 
             }
             else if (message.type == ACCEPT){
+                System.out.println("accept " + myId + " " + message.senderid );
+
                 responseCounter++;
 
             }
             else if (message.type == DECLINE){
+                System.out.println("decline " + myId + " " + message.senderid );
+
                 responseCounter++;
 
             }
@@ -84,8 +99,10 @@ class MyThread extends Thread {
 
     public void sendMessages(Message message){
         for(Connection connection : connections){
-            if(!connection.isParentConnection(myId))
+            if(!connection.isParentConnection(myId)){
+                System.out.println("sending " + myId );
                 connection.sendMessage(myId, message);
+            }
 
         }
     }
