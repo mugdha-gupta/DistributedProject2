@@ -38,15 +38,15 @@ class MyThread extends Thread {
     }
 
     public void initialize(){
-        System.out.println("initializing");
+        System.out.println("initializing " + this.id);
 
     }
     public void receiveMessages(){
-        System.out.println("receiving");
+        System.out.println("receiving " + this.id);
 
     }
     public void processMessages(){
-        System.out.println("processing");
+        System.out.println("processing "+ this.id);
 
     }
 
