@@ -7,8 +7,8 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class Connection {
-    private HashMap<Integer, Queue<Message>> input;
-    private HashMap<Integer, Queue<Message>> output;
+    private HashMap<Integer, Queue<Message>> input = new HashMap<>();
+    private HashMap<Integer, Queue<Message>> output = new HashMap<>();
     public Connection(int processId1, int processId2){
         Queue<Message> queue1 = new LinkedList<>();
         input.put(processId1, queue1);
