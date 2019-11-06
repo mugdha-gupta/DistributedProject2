@@ -15,7 +15,7 @@ class MyThread extends Thread {
     int parent;
     ArrayList<Connection> connections;
     int responseCounter = 0;
-    public Queue<Message> recievedMessages;
+    public HashMap<Connection, Message> recievedMessages;
     
     public MyThread(int my_id, ArrayList<Connection> my_neighbors) {
         //initialize our class variables
@@ -43,17 +43,21 @@ class MyThread extends Thread {
     }
     public void receiveMessages(){
         System.out.println("receiving " + myId);
-
-
+        recievedMessages.clear();
+        for(Connection connection : connections){
+            recievedMessages.put(connection, connection.getMessage(myId));
+        }
     }
+
     public void processMessages(){
         System.out.println("processing "+ myId);
-        while (!recievedMessages.isEmpty())
+        for (Connection connection: recievedMessages.keySet())
         {
-            Message message = recievedMessages.poll();
+            Message message = recievedMessages.get(connection);
             if (message.type == INIT) {
                 if (maxIdFound < message.maxIdFound){
                     parent = message.senderid;
+                    connection.setParentConnection(myId);
                     sendMessages(new Message(myId, parent, INIT));
                 }
                 else {
@@ -84,7 +88,8 @@ class MyThread extends Thread {
     public void sendMessages(Message message){
         System.out.println("send messages to neighbors here");
         for(Connection connection : connections){
-            connection.sendMessage(myId, message);
+            if(!connection.isParentConnection(myId))
+                connection.sendMessage(myId, message);
         }
     }
 
