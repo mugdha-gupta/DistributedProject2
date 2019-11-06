@@ -10,7 +10,7 @@ import java.util.Queue;
 public class Connection {
     private HashMap<Integer, Queue<Message>> input = new HashMap<>();
     private HashMap<Integer, Queue<Message>> output = new HashMap<>();
-    private HashSet<Integer> parentConnection = new HashSet<>();
+    private int idHasParentConnection = -1;
 
     public Connection(int processId1, int processId2){
         Queue<Message> queue1 = new LinkedList<>();
@@ -32,13 +32,17 @@ public class Connection {
     }
 
     public boolean isParentConnection(int myId){
-        if(parentConnection.contains(myId))
+        if(idHasParentConnection == myId)
             return true;
         else
             return false;
     }
 
     public void hasParent(int myId){
-        parentConnection.add(myId);
+        idHasParentConnection = myId;
+    }
+
+    public void removeParent(){
+        idHasParentConnection = -1;
     }
 }

@@ -56,8 +56,7 @@ class MyThread extends Thread {
             Message message = recievedMessages.get(connection);
             if (message.type == INIT) {
                 if (maxIdFound < message.maxIdFound){
-                    parent = message.senderid;
-                    setParent(parent);
+                    setParent(message.senderid, connection);
                     sendMessages(new Message(myId, parent, INIT));
                 }
                 else {
@@ -98,8 +97,13 @@ class MyThread extends Thread {
 
     }
 
-    public void setParent(int parentId){
-        
+    public void setParent(int parentId, Connection connection){
+        parent = parentId;
+        for(Connection conn : connections){
+            if(conn.isParentConnection(myId))
+                conn.removeParent();
+        }
+        connection.hasParent(myId);
     }
 
 }
