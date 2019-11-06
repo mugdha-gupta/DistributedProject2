@@ -42,27 +42,27 @@ class MyThread extends Thread {
     }
 
     public void initialize(){
-        System.out.println("initializing " + this.id);
-        sendMessages(new Message(id, id, INIT));
+        System.out.println("initializing " + myId);
+        sendMessages(new Message(myId, myId, INIT));
 
     }
     public void receiveMessages(){
-        System.out.println("receiving " + this.id);
+        System.out.println("receiving " + myId);
 
 
     }
     public void processMessages(){
-        System.out.println("processing "+ this.id);
+        System.out.println("processing "+ myId);
         while (!recievedMessages.isEmpty())
         {
             Message message = recievedMessages.poll();
             if (message.type == INIT) {
                 if (maxIdFound < message.maxIdFound){
                     parent = message.senderid;
-                    sendMessages(new Message(id, parent, INIT));
+                    sendMessages(new Message(myId, parent, INIT));
                 }
                 else {
-                    sendResponse(new Message(id, maxIdFound, DECLINE), message.senderid);
+                    sendResponse(new Message(myId, maxIdFound, DECLINE), message.senderid);
 
                 }
 

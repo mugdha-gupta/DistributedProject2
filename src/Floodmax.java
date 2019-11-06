@@ -64,7 +64,7 @@ public class Floodmax {
 
         Thread[] threads = new Thread[numThreads];
         for(int i = 0; i < numThreads; i++){
-            threads[i] = new MyThread(threadIDs[i], neighborMap.get(threadIDs[i]));
+            threads[i] = new MyThread(threadIDs[i], connections.get(threadIDs[i]));
         }
         System.out.println(neighborMap.toString());
         return connections;
