@@ -10,18 +10,11 @@ public class Floodmax {
 
     public static void main(String[] args) {
         HashMap<Integer, ArrayList<Integer>> neighbors;
-        int diam = 0;
 
         File file = new File("C:\\Users\\mugdh\\gitviews\\DistributedProject2\\src\\input.dat");
         try {
             neighbors = processInputFile(file);
-//            for (int start : neighbors.keySet()) {
-//
-//                int newDiam = dfs(neighbors.get(start));
-//                if (newDiam > diam)
-//                    diam = newDiam;
-//            }
-
+            diam = dfs();
 
 
         } catch (IOException ex) {
