@@ -2,18 +2,26 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Scanner;
 import java.util.HashMap;
 
 public class Floodmax {
 
     public static void main(String[] args) {
-        HashMap<Integer, ArrayList<Connection>> neighbors;
+        HashMap<Integer, ArrayList<Integer>> neighbors;
         HashMap<Integer, ArrayList<Connection>> links;
+        int diam = 0;
 
         File file = new File("C:\\Users\\mugdh\\gitviews\\DistributedProject2\\src\\input.dat");
         try {
-            links = processInputFile(file);
+            neighbors = processInputFile(file);
+            for (int start : neighbors.keySet()) {
+
+                int newDiam = dfs(neighbors.get(start));
+                if (newDiam > diam)
+                    diam = newDiam;
+            }
 
         } catch (IOException ex) {
             System.err.println(ex);
@@ -22,7 +30,7 @@ public class Floodmax {
 
     }
 
-    static HashMap<Integer, ArrayList<Connection>> processInputFile(File file) throws FileNotFoundException {
+    static HashMap<Integer, ArrayList<Integer>> processInputFile(File file) throws FileNotFoundException {
         if (!file.exists()) {
             System.out.println("The input file does not exist.");
             return null;
@@ -67,7 +75,12 @@ public class Floodmax {
             threads[i] = new MyThread(threadIDs[i], connections.get(threadIDs[i]));
         }
         System.out.println(neighborMap.toString());
-        return connections;
+        return neighborMap;
+    }
+
+    static int dfs(ArrayList<Integer> neighbors){
+
+        return 1;
     }
 }
 

@@ -1,8 +1,6 @@
 
 import java.util.*;
 
-
-
 class MyThread extends Thread {
 
     public final int INIT = 0;
@@ -12,11 +10,11 @@ class MyThread extends Thread {
 
     public int myId;
     public int maxIdFound;
-    int parent;
-    ArrayList<Connection> connections;
-    int responseCounter = 0;
+    public int parent;
+    public ArrayList<Connection> connections;
+    public int responseCounter = 0;
     public HashMap<Connection, Message> recievedMessages;
-    
+
     public MyThread(int my_id, ArrayList<Connection> my_neighbors) {
         //initialize our class variables
         myId = my_id;
@@ -37,7 +35,7 @@ class MyThread extends Thread {
     }
 
     public void initialize(){
-        System.out.println("initializing " + myId);
+        //System.out.println("initializing " + myId);
         sendMessages(new Message(myId, myId, INIT));
 
     }
