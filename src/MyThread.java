@@ -1,5 +1,6 @@
 
 import java.util.*;
+import java.util.concurrent.CyclicBarrier;
 
 class MyThread extends Thread {
 
@@ -8,6 +9,7 @@ class MyThread extends Thread {
     public final int DECLINE = 2;
 
 
+    public CyclicBarrier barrier;
     public int myId;
     public int maxIdFound;
     public int parent;
@@ -15,13 +17,14 @@ class MyThread extends Thread {
     public int responseCounter = 0;
     public HashMap<Connection, Message> recievedMessages;
 
-    public MyThread(int my_id, ArrayList<Connection> my_neighbors) {
+    public MyThread(int my_id, ArrayList<Connection> my_neighbors, CyclicBarrier my_barrier) {
         //initialize our class variables
         myId = my_id;
         maxIdFound = my_id;
         parent = -1;
         connections = my_neighbors;
         recievedMessages = new HashMap<>();
+        barrier = my_barrier;
 
         //start from within constructor so main thread never has to call it
         start();
@@ -35,12 +38,10 @@ class MyThread extends Thread {
     }
 
     public void initialize(){
-        //System.out.println("initializing " + myId);
         sendMessages(new Message(myId, myId, INIT));
 
     }
     public void receiveMessages(){
-        System.out.println("receiving " + myId);
         recievedMessages.clear();
         for(Connection connection : connections){
             Message message = connection.getMessage(myId);
@@ -50,7 +51,6 @@ class MyThread extends Thread {
     }
 
     public void processMessages(){
-        System.out.println("processing "+ myId);
         for (Connection connection: recievedMessages.keySet())
         {
             Message message = recievedMessages.get(connection);
@@ -59,6 +59,7 @@ class MyThread extends Thread {
                     parent = message.senderid;
                     setParent(parent);
                     sendMessages(new Message(myId, parent, INIT));
+                    responseCounter = 0;
                 }
                 else {
                     sendResponse(new Message(myId, maxIdFound, DECLINE), message.senderid);
@@ -72,9 +73,6 @@ class MyThread extends Thread {
             }
             else if (message.type == DECLINE){
                 responseCounter++;
-//                if (maxIdFound == message.maxIdFound) {
-//                    responseCounter++;
-//                }
 
             }
             else{
@@ -86,7 +84,6 @@ class MyThread extends Thread {
     }
 
     public void sendMessages(Message message){
-        System.out.println("send messages to neighbors here");
         for(Connection connection : connections){
             if(!connection.isParentConnection(myId))
                 connection.sendMessage(myId, message);
