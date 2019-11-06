@@ -95,7 +95,7 @@ class MyThread extends Thread {
                     }
                     else {
                         if(connection != null)
-                        sendResponse(new Message(myId, maxIdFound, DECLINE), connection);
+                            sendResponse(new Message(myId, maxIdFound, DECLINE), connection);
                     }
 
                 }
@@ -117,7 +117,7 @@ class MyThread extends Thread {
         responseCounter = 0;
         messagesSent = 0;
         if(parentConnection != null)
-        sendResponse(new Message(myId, maxIdFound, ACCEPT), parentConnection);
+            sendResponse(new Message(myId, maxIdFound, ACCEPT), parentConnection);
 
     }
     public void sendMessages(Message message, int round){
@@ -152,7 +152,7 @@ class MyThread extends Thread {
     public void setParent(int parentId, Connection connection){
         if(parent != -1){
             if(parentConnection != null)
-            sendResponse(new Message(myId, maxIdFound, DECLINE), parentConnection);
+                sendResponse(new Message(myId, maxIdFound, DECLINE), parentConnection);
         }
         parent = parentId;
         parentConnection = connection;
