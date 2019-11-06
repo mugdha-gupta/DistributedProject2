@@ -32,18 +32,11 @@ class MyThread extends Thread {
     }
 
     public void run()  {
-        receiveMessages();
-        processMessages();
+        //run only once
         initialize();
-        try {
-            barrier.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (BrokenBarrierException e) {
-            e.printStackTrace();
-        }
-        if(barrier.isBroken())
-            barrier.reset();
+
+        //now process
+        processMessages();
 
     }
 
@@ -52,7 +45,6 @@ class MyThread extends Thread {
 
     }
     public void receiveMessages(){
-        recievedMessages.clear();
         for(Connection connection : connections){
             Message message = connection.getMessage(myId);
             if(message != null)
@@ -61,38 +53,43 @@ class MyThread extends Thread {
     }
 
     public void processMessages(){
-        for (Connection connection: recievedMessages.keySet())
-        {
-            Message message = recievedMessages.get(connection);
-            if (message.type == INIT) {
-//                System.out.println("init " + myId + " " + message.senderid );
-                if (maxIdFound < message.maxIdFound){
-                    setParent(message.senderid, connection);
-                    sendMessages(new Message(myId, parent, INIT));
-                    responseCounter = 0;
-                }
-                else {
-                    sendResponse(new Message(myId, maxIdFound, DECLINE), message.senderid);
+        receiveMessages();
+        while(!recievedMessages.isEmpty() || responseCounter != connections.size()){
+            HashSet<Connection> connectionsToRemove = new HashSet<>();
+            for (Connection connection: recievedMessages.keySet())
+            {
+                Message message = recievedMessages.get(connection);
+                if (message.type == INIT) {
+                    if (maxIdFound < message.maxIdFound){
+                        setParent(message.senderid, connection);
+                        sendMessages(new Message(myId, parent, INIT));
+                        responseCounter = 0;
+                    }
+                    else {
+                        sendResponse(new Message(myId, maxIdFound, DECLINE), connection);
+                    }
 
                 }
+                else if (message.type == ACCEPT){
+                    System.out.println("accept " + myId + " " + message.senderid );
 
+                    responseCounter++;
+
+                }
+                else if (message.type == DECLINE){
+                    System.out.println("decline " + myId + " " + message.senderid );
+
+                    responseCounter++;
+
+                }
+                else{
+                    System.out.println("invalid type of message");
+                }
+                connectionsToRemove.add(connection);
             }
-            else if (message.type == ACCEPT){
-                System.out.println("accept " + myId + " " + message.senderid );
-
-                responseCounter++;
-
-            }
-            else if (message.type == DECLINE){
-                System.out.println("decline " + myId + " " + message.senderid );
-
-                responseCounter++;
-
-            }
-            else{
-                System.out.println("invalid type of message");
-            }
-
+            for(Connection connection : connectionsToRemove)
+                recievedMessages.remove(connection);
+            receiveMessages();
         }
 
     }
@@ -107,9 +104,9 @@ class MyThread extends Thread {
         }
     }
 
-    public void sendResponse(Message message, int parent){
+    public void sendResponse(Message message, Connection connection){
         System.out.println("send response to potential parent here");
-
+        connection.sendMessage(myId, message);
     }
 
     public void setParent(int parentId, Connection connection){
