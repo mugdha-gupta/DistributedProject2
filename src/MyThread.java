@@ -63,6 +63,12 @@ class MyThread extends Thread {
         }
 
         System.out.println("Thread: " + myId + "\tLeader found: " + maxIdFound);
+        if(parent == -1){
+            for(Connection connection : connections){
+                System.out.println("There were " + connection.getNumberMessages() + " messages printed.");
+                break;
+            }
+        }
 
 
     }

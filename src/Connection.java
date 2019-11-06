@@ -33,6 +33,9 @@ public class Connection {
             e.printStackTrace();
         }
         output.get(myId).add(message);
+
+        //nummessages ++
+        counter.getAndIncrement();
     }
 
     public Message getMessage(int myId){
@@ -53,7 +56,12 @@ public class Connection {
         idHasParentConnection = myId;
     }
 
+    //no longer is a parent connection for this id
     public void removeParent(){
         idHasParentConnection = -1;
+    }
+
+    public int getNumberMessages(){
+        return counter.get();
     }
 }
