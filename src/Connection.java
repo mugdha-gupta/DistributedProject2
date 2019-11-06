@@ -1,7 +1,3 @@
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,8 +29,6 @@ public class Connection {
             e.printStackTrace();
         }
         output.get(myId).add(message);
-        System.out.println(counter.incrementAndGet());
-
     }
 
     public Message getMessage(int myId){

@@ -1,39 +1,42 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Floodmax {
 
-    static int maxCount, x;
-
     public static void main(String[] args) {
-        HashMap<Integer, ArrayList<Integer>> neighbors;
+        HashMap<Integer, ArrayList<Integer>> neighborhood;
+        HashMap<Integer, ArrayList<Connection>> connections;
+        int diameter;
+        Thread[] threads;
 
         File file = new File("C:\\Users\\mugdh\\gitviews\\DistributedProject2\\src\\input.dat");
-        try {
-            processInputFile(file);
-
-
-        } catch (IOException ex) {
-            System.err.println(ex);
-        }
-
-
+        neighborhood = getNeighborhood(file); //get the neighbor map
+        diameter = findDiameter(neighborhood); //get the diameter from the neigbor map
+        connections = createConnections(neighborhood); //get connections map from neighbor map
+        threads = initializeThreads(connections, diameter); //initialize all threads
 
     }
 
-    static HashMap<Integer, ArrayList<Integer>> processInputFile(File file) throws FileNotFoundException {
+    //parse input file and return graph in HashMap form with all neighbors
+    static HashMap<Integer, ArrayList<Integer>> getNeighborhood(File file)  {
+        //file doesn't exist
         if (!file.exists()) {
             System.out.println("The input file does not exist.");
             return null;
         }
 
-        Scanner sc = new Scanner(file);
+        Scanner sc = null;
+        try {
+            sc = new Scanner(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
         int numThreads = 0;
 
+        //numthreads first thing read
         if (sc.hasNext())
             numThreads = sc.nextInt(); //get num threads
 
@@ -42,99 +45,108 @@ public class Floodmax {
             return null;
         }
 
-        CyclicBarrier barrier = new CyclicBarrier(numThreads);
         HashMap<Integer, ArrayList<Integer>> neighborMap = new HashMap<>();
-        int[] threadIDs = new int[numThreads];
-        for (int i = 0; i < numThreads; i++) {
-            threadIDs[i] = sc.nextInt();
-            neighborMap.put(threadIDs[i], new ArrayList<>());
-        }
 
-        for (int i = 0; i < numThreads; i++) {
-            for (int j = 0; j < numThreads; j++) {
-                int connection = sc.nextInt();
-                if (connection == 1) {
-                    ArrayList<Integer> friends = neighborMap.get(threadIDs[i]);
-                    friends.add(threadIDs[j]);
-                    neighborMap.put(threadIDs[i], friends);
+        //initialize the array lists in the neighbor map
+        for (int i = 0; i < numThreads; i++)
+            neighborMap.put(sc.nextInt(), new ArrayList<>());
+
+        //for each process id
+        for(int processId : neighborMap.keySet()){
+            for(int possibleNeighborId : neighborMap.keySet()){ //we will look at each possible neighbor
+                if(sc.nextInt() == 1){ //if connection exists here get neighbors and add possible neighbor to it
+                    ArrayList<Integer> currNeighbors = neighborMap.get(processId);
+                    currNeighbors.add(possibleNeighborId);
+                    neighborMap.put(processId, currNeighbors);
                 }
             }
         }
-        createConnections(neighborMap, threadIDs, numThreads, barrier);
 
+        //return the neighbor map
         return neighborMap;
     }
 
+    //fidn the diameter using the neigborhood
     static int findDiameter(HashMap<Integer, ArrayList<Integer>> neighborhood){
         int diameter =0;
-        for(int id : neighborhood.keySet()){
-            int longestPath = getLongest(id, neighborhood);
+        for(int id : neighborhood.keySet()){ //for each process
+            int longestPath = getLongest(id, neighborhood); //find longest path to any node
             if(longestPath > diameter)
-                diameter =longestPath;
+                diameter =longestPath; //if the longest path is bigger than current diameter, set diameter to lengest path
         }
         return diameter;
     }
 
+    //brute force solution to find the length of path to furthest vertex
     static int getLongest(int id, HashMap<Integer, ArrayList<Integer>> neighborhood){
-        HashSet<Integer> visited = new HashSet<>();
-        visited.add(id);
+        HashSet<Integer> visited = new HashSet<>(); //set of visited nodes starts at empty
+        visited.add(id); //add current id to the visited node
         int dist = 0;
-        while (visited.size() < neighborhood.keySet().size()){
+        while (visited.size() < neighborhood.keySet().size()){ //while we haven't visited all nodes
             HashSet<Integer> toAdd = new HashSet<>();
             for(int visitedId : visited){
-                ArrayList<Integer> neighbors = neighborhood.get(visitedId);
+                ArrayList<Integer> neighbors = neighborhood.get(visitedId); //get all nodes reachable from visited nodes
                 for(int neighbor : neighbors){
-                    if(!visited.contains(neighbor)){
+                    if(!visited.contains(neighbor)){ //if that node is not already in visited add it
                         toAdd.add(neighbor);
                     }
                 }
             }
-            for(int ad : toAdd)
+            for(int ad : toAdd) //using to add to avoid concurrent modification error
                 visited.add(ad);
             toAdd.clear();
-            dist++;
+            dist++; //we travelled one length
         }
         return dist;
     }
 
-    static void initializeThreads(int numThreads,
-                                  int[] threadIDs,
-                                  HashMap<Integer,
-                                          ArrayList<Connection>> connections, CyclicBarrier barrier, int diam){
+    //initialize all the threads
+    static Thread[] initializeThreads(HashMap<Integer, ArrayList<Connection>> connections, int diameter){
+        int numThreads = connections.keySet().size();
         Thread[] threads = new Thread[numThreads];
-        for(int i = 0; i < numThreads; i++){
-            threads[i] = new MyThread(threadIDs[i], connections.get(threadIDs[i]), barrier, diam);
+        CyclicBarrier barrier = new CyclicBarrier(numThreads); //create cyclic barrier to syncronize rounds
+        int i = 0;
+        for(int id : connections.keySet()){ //for each process
+            threads[i] = new MyThread(id, connections.get(id), barrier, diameter); //create a thread, this will also start the thread
+            i++;
         }
+        return threads;
     }
 
-    static void createConnections(HashMap<Integer, ArrayList<Integer>> neighborhood, int[] threadIDs, int numThreads, CyclicBarrier barrier) {
+    //create the connection map
+    static HashMap<Integer, ArrayList<Connection>> createConnections(HashMap<Integer, ArrayList<Integer>> neighborhood) {
         HashMap<Integer, ArrayList<Connection>> connections = new HashMap<>();
-        AtomicInteger counter = new AtomicInteger();
+        AtomicInteger counter = new AtomicInteger(); //atomic integer to count num of messages
 
-        for (int id : threadIDs) {
-            ArrayList<Integer> neighbors = neighborhood.get(id);
+        for (int id : neighborhood.keySet()) { //for each process
+            ArrayList<Integer> neighbors = neighborhood.get(id); //get all the neighbors
             for (int neighbor : neighbors) {
-                if (id < neighbor) {
+                if (id < neighbor) { //if id is less than neighbor, this connection was already created
                     Connection connection = new Connection(id, neighbor,  counter);
                     ArrayList<Connection> myConnections;
+                    //get list of current process connection if exists, else create it
                     if (connections.containsKey(id))
                         myConnections = connections.get(id);
                     else
                         myConnections = new ArrayList<>();
                     ArrayList<Connection> neighborConnections;
+                    //get list of neighbor process connection if exists, else create it
                     if (connections.containsKey(neighbor))
                         neighborConnections = connections.get(neighbor);
                     else
                         neighborConnections = new ArrayList<>();
+
+                    //add the connection to the current id's and the neighbor's list of connections
                     myConnections.add(connection);
                     neighborConnections.add(connection);
+
+                    //add them back to the connections map
                     connections.put(id, myConnections);
                     connections.put(neighbor, neighborConnections);
                 }
             }
         }
-        int diam = findDiameter(neighborhood);
-        initializeThreads(numThreads, threadIDs, connections, barrier, diam);
+        return connections;
     }
 
 }
