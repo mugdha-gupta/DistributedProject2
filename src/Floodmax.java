@@ -11,7 +11,7 @@ public class Floodmax {
     public static void main(String[] args) {
         HashMap<Integer, ArrayList<Integer>> neighbors;
 
-        File file = new File("C:\\Users\\mugdh\\gitviews\\DistributedProject2\\src\\input.dat");
+        File file = new File("C:\\Users\\Nymisha\\IdeaProjects\\DistributedProject2\\src\\input.dat");
         try {
             processInputFile(file);
 
@@ -59,7 +59,6 @@ public class Floodmax {
                 }
             }
         }
-        System.out.println(neighborMap.toString());
         createConnections(neighborMap, threadIDs, numThreads, barrier);
 
 //
@@ -91,7 +90,7 @@ public class Floodmax {
 
     static int getLongest(int id, HashMap<Integer, ArrayList<Integer>> neighborhood){
         HashSet<Integer> ids = new HashSet<>();
-        for()
+
         return 0;
     }
 

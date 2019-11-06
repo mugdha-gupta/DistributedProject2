@@ -62,7 +62,7 @@ class MyThread extends Thread {
             e.printStackTrace();
         }
 
-        System.out.println("MAX IS " + maxIdFound);
+        System.out.println("Thread: " + myId + "\tLeader found: " + maxIdFound);
 
 
     }
@@ -75,7 +75,6 @@ class MyThread extends Thread {
         for(Connection connection : connections){
             Message message = connection.getMessage(myId);
             if(message != null){
-                System.out.println(myId + "'s message " + message.senderid + " " +  message.type );
                 recievedMessages.put(connection, message);
             }
         }
@@ -83,17 +82,11 @@ class MyThread extends Thread {
 
     public void processMessages(int i){
         receiveMessages();
-        if(myId == 2 && i ==1)
-            System.out.println("yo " + recievedMessages.size());
         while(responseCounter < messagesSent || !recievedMessages.isEmpty()){
-            //System.out.println(myId + " " + i + " " + responseCounter + " " + messagesSent );
             HashSet<Connection> connectionsToRemove = new HashSet<>();
             for (Connection connection: recievedMessages.keySet())
             {
                 Message message = recievedMessages.get(connection);
-                if(myId == 2 && message.senderid ==1)
-                    System.out.println("type " + message.type);
-                System.out.println();
                 if (message.type == INIT) {
                     if (maxIdFound < message.maxIdFound){
                         maxIdFound = message.maxIdFound;
@@ -125,15 +118,10 @@ class MyThread extends Thread {
 
     }
     public void sendMessages(Message message, int round){
-        System.out.println(myId + " " + updatedParent + " " + round);
         if(updatedParent == false)
             return;
-        if(myId == 1)
-        System.out.println("parenet of 1" + parent);
         for(Connection connection : connections){
             if(!connection.isParentConnection(myId)){
-                if(myId ==1 && round ==1)
-                System.out.println(myId + "sending");
                 connection.sendMessage(myId, message);
                 messagesSent++;
             }
@@ -145,7 +133,6 @@ class MyThread extends Thread {
             return;
         for(Connection connection : connections){
             if(!connection.isParentConnection(myId)){
-                System.out.println(myId + "sending");
                 connection.sendMessage(myId, message);
                 messagesSent++;
             }
