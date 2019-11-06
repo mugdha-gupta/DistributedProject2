@@ -10,7 +10,6 @@ public class Floodmax {
 
     public static void main(String[] args) {
         HashMap<Integer, ArrayList<Integer>> neighbors;
-        HashMap<Integer, ArrayList<Connection>> links;
         int diam = 0;
 
         File file = new File("C:\\Users\\mugdh\\gitviews\\DistributedProject2\\src\\input.dat");
@@ -48,12 +47,10 @@ public class Floodmax {
         }
 
         HashMap<Integer, ArrayList<Integer>> neighborMap = new HashMap<>();
-        HashMap<Integer, ArrayList<Connection>> connections = new HashMap<>();
         int[] threadIDs = new int[numThreads];
         for (int i = 0; i < numThreads; i++) {
             threadIDs[i] = sc.nextInt();
             neighborMap.put(threadIDs[i], new ArrayList<>());
-            connections.put(threadIDs[i], new ArrayList<>());
         }
 
         for (int i = 0; i < numThreads; i++) {
@@ -61,26 +58,53 @@ public class Floodmax {
                 int connection = sc.nextInt();
                 if (connection == 1) {
                     ArrayList<Integer> friends = neighborMap.get(threadIDs[i]);
-                    ArrayList<Connection> connectionArrayList = connections.get(threadIDs[i]);
                     friends.add(threadIDs[j]);
-                    connectionArrayList.add(new Connection(threadIDs[i], threadIDs[j]));
                     neighborMap.put(threadIDs[i], friends);
-                    connections.put(threadIDs[i], connectionArrayList);
                 }
             }
         }
-
-        Thread[] threads = new Thread[numThreads];
-        for(int i = 0; i < numThreads; i++){
-            threads[i] = new MyThread(threadIDs[i], connections.get(threadIDs[i]));
-        }
         System.out.println(neighborMap.toString());
+        createConnections(neighborMap, threadIDs, numThreads);
         return neighborMap;
     }
 
     static int dfs(ArrayList<Integer> neighbors){
 
         return 1;
+    }
+
+    static void initializeThreads(int numThreads, int[] threadIDs, HashMap<Integer, ArrayList<Connection>> connections){
+        Thread[] threads = new Thread[numThreads];
+        for(int i = 0; i < numThreads; i++){
+            threads[i] = new MyThread(threadIDs[i], connections.get(threadIDs[i]));
+        }
+    }
+
+    static void createConnections(HashMap<Integer, ArrayList<Integer>> neighborhood, int[] threadIDs, int numThreads){
+        HashMap<Integer, ArrayList<Connection>> connections = new HashMap<>();
+        for(int id : threadIDs){
+            ArrayList<Integer> neighbors = neighborhood.get(id);
+            for(int neighbor : neighbors){
+                if(id < neighbor){
+                    Connection connection = new Connection(id, neighbor);
+                    ArrayList<Connection> myConnections;
+                    if(connections.containsKey(id))
+                        myConnections = connections.get(id);
+                    else
+                        myConnections = new ArrayList<>();
+                    ArrayList<Connection> neighborConnections;
+                    if(connections.containsKey(neighbor))
+                        neighborConnections = connections.get(neighbor);
+                    else
+                        neighborConnections = new ArrayList<>();
+                    myConnections.add(connection);
+                    neighborConnections.add(connection);
+                    connections.put(id, myConnections);
+                    connections.put(neighbor, neighborConnections);
+                }
+            }
+        }
+        initializeThreads(numThreads, threadIDs, connections);
     }
 }
 

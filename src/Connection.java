@@ -28,7 +28,8 @@ public class Connection {
     }
 
     public Message getMessage(int myId){
-        return input.get(myId).poll();
+        Message message = input.get(myId).poll();
+        return message;
     }
 
     public boolean isParentConnection(int myId){

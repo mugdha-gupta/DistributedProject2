@@ -35,22 +35,19 @@ class MyThread extends Thread {
     }
 
     public void initialize(){
-        //System.out.println("initializing " + myId);
         sendMessages(new Message(myId, myId, INIT));
 
     }
     public void receiveMessages(){
-        System.out.println("receiving " + myId);
         recievedMessages.clear();
         for(Connection connection : connections){
             Message message = connection.getMessage(myId);
             if(message != null)
-                recievedMessages.put(connection, connection.getMessage(myId));
+                recievedMessages.put(connection, message);
         }
     }
 
     public void processMessages(){
-        System.out.println("processing "+ myId);
         for (Connection connection: recievedMessages.keySet())
         {
             Message message = recievedMessages.get(connection);
@@ -85,10 +82,10 @@ class MyThread extends Thread {
     }
 
     public void sendMessages(Message message){
-        System.out.println("send messages to neighbors here");
         for(Connection connection : connections){
             if(!connection.isParentConnection(myId))
                 connection.sendMessage(myId, message);
+
         }
     }
 
