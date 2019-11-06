@@ -22,9 +22,9 @@ class MyThread extends Thread {
     public HashMap<Connection, Message> recievedMessages;
     public boolean updatedParent = true;
 
-    public int diam = 5;
+    public int diam = 0;
 
-    public MyThread(int my_id, ArrayList<Connection> my_neighbors, CyclicBarrier my_barrier) {
+    public MyThread(int my_id, ArrayList<Connection> my_neighbors, CyclicBarrier my_barrier, int my_diam) {
         //initialize our class variables
         myId = my_id;
         maxIdFound = my_id;
@@ -34,7 +34,7 @@ class MyThread extends Thread {
         connections = my_neighbors;
         recievedMessages = new HashMap<>();
         barrier = my_barrier;
-
+        diam = my_diam;
         //start from within constructor so main thread never has to call it
         start();
     }

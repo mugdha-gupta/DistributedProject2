@@ -62,20 +62,6 @@ public class Floodmax {
         System.out.println(neighborMap.toString());
         createConnections(neighborMap, threadIDs, numThreads, barrier);
 
-//
-//        maxCount = Integer.MIN_VALUE;
-//
-//        int start = 0;
-//        for (int key : neighborMap.keySet())
-//        {
-//            start = key;
-//            break;
-//        }
-//
-//        dfs(start, numThreads, neighborMap.get(start));
-//
-//        dfs(x, numThreads, neighborMap.get(x));
-//        System.out.println("diam " + maxCount);
         return neighborMap;
     }
 
@@ -90,21 +76,36 @@ public class Floodmax {
     }
 
     static int getLongest(int id, HashMap<Integer, ArrayList<Integer>> neighborhood){
-        HashSet<Integer> ids = new HashSet<>();
-        for()
-        return 0;
+        HashSet<Integer> visited = new HashSet<>();
+        visited.add(id);
+        int dist = 0;
+        while (visited.size() < neighborhood.keySet().size()){
+            HashSet<Integer> toAdd = new HashSet<>();
+            for(int visitedId : visited){
+                ArrayList<Integer> neighbors = neighborhood.get(visitedId);
+                for(int neighbor : neighbors){
+                    if(!visited.contains(neighbor)){
+                        toAdd.add(neighbor);
+                    }
+
+                }
+            }
+            for(int ad : toAdd)
+                visited.add(ad);
+            toAdd.clear();
+            dist++;
+        }
+        System.out.println(id + " " + dist);
+        return dist;
     }
 
-
-    static int dfs(ArrayList<Integer> neighbors){
-
-        return 1;
-    }
-
-    static void initializeThreads(int numThreads, int[] threadIDs, HashMap<Integer, ArrayList<Connection>> connections, CyclicBarrier barrier){
+    static void initializeThreads(int numThreads,
+                                  int[] threadIDs,
+                                  HashMap<Integer,
+                                          ArrayList<Connection>> connections, CyclicBarrier barrier, int diam){
         Thread[] threads = new Thread[numThreads];
         for(int i = 0; i < numThreads; i++){
-            threads[i] = new MyThread(threadIDs[i], connections.get(threadIDs[i]), barrier);
+            threads[i] = new MyThread(threadIDs[i], connections.get(threadIDs[i]), barrier, diam);
         }
     }
 
@@ -132,36 +133,10 @@ public class Floodmax {
                 }
             }
         }
-        initializeThreads(numThreads, threadIDs, connections, barrier);
+        int diam = findDiameter(neighborhood);
+        initializeThreads(numThreads, threadIDs, connections, barrier, diam);
     }
-    static void dfs(int node, int n, ArrayList<Integer> neighbors)
-    {
-        HashMap<Integer, Boolean> visited = new HashMap<Integer, Boolean>();
-        int count = 0;
 
-        // Mark all the vertices as not visited
-//        for(int thread : threadIDs)
-
-        // Increment count by 1 for visited node
-        //dfsUtil(node, count + 1, visited, neighbors);
-
-    }
-//    static void dfsUtil(int node, int count, HashMap<Integer, Boolean> visited, ArrayList<Integer> neighbors)
-//    {
-//        visited[node] = true;
-//        count++;
-//
-//        for(int neighbor: neighbors)
-//        {
-//            if(!visited[neighbor]){
-//                if (count >= maxCount) {
-//                    maxCount = count;
-//                    x = neighbor;
-//                }
-//                dfsUtil(neighbor, count, visited, neighbors);
-//            }
-//        }
-//    }
 }
 
 
