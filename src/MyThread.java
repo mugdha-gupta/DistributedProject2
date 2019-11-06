@@ -59,7 +59,7 @@ class MyThread extends Thread {
             if (message.type == INIT) {
                 if (maxIdFound < message.maxIdFound){
                     parent = message.senderid;
-                    connection.hasParent(myId);
+                    setParent(parent);
                     sendMessages(new Message(myId, parent, INIT));
                 }
                 else {
@@ -98,6 +98,10 @@ class MyThread extends Thread {
     public void sendResponse(Message message, int parent){
         System.out.println("send response to potential parent here");
 
+    }
+
+    public void setParent(int parentId){
+        
     }
 
 }
