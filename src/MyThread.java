@@ -23,7 +23,7 @@ class MyThread extends Thread {
         maxIdFound = my_id;
         parent = -1;
         connections = my_neighbors;
-        recievedMessages = new LinkedList<>();
+        recievedMessages = new HashMap<>();
 
         //start from within constructor so main thread never has to call it
         start();
