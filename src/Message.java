@@ -1,5 +1,8 @@
-import java.util.Random;
 
+
+//Class to kee track of the message information
+//this instance is sent over the connections between threads
+//for communication
 public class Message {
 
     int senderid;
