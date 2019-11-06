@@ -8,6 +8,7 @@ public class Connection {
     private int idHasParentConnection = -1;
     private AtomicInteger counter;
 
+    //initialize connection information
     public Connection(int processId1, int processId2, AtomicInteger counter){
         Queue<Message> queue1 = new LinkedList<>();
         input.put(processId1, queue1);
@@ -20,6 +21,9 @@ public class Connection {
         this.counter = counter;
     }
 
+    //function to send the message over the connection, given the source id and the message
+    //we wait the transmission time before sending the message
+    //and increment our counter to keep track of the total number of messages sent
     public void sendMessage(int myId, Message message){
         Random rand = new Random();
         int transmissionTime =   rand.nextInt(10)+1;
@@ -36,6 +40,7 @@ public class Connection {
         return message;
     }
 
+    //used to flag a connection as a parent edge so that we don't send duplicate messages
     public boolean isParentConnection(int myId){
         if(idHasParentConnection == myId)
             return true;
@@ -43,6 +48,7 @@ public class Connection {
             return false;
     }
 
+    //manipulation of the parent of the connection
     public void hasParent(int myId){
         idHasParentConnection = myId;
     }
