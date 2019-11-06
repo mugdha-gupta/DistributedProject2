@@ -8,10 +8,13 @@ import java.util.HashMap;
 public class Floodmax {
 
     public static void main(String[] args) {
-        HashMap<Integer, ArrayList<Integer>> neighbors;
+        HashMap<Integer, ArrayList<Connection>> neighbors;
+        HashMap<Integer, ArrayList<Connection>> links;
+
         File file = new File("C:\\Users\\Nymisha\\IdeaProjects\\DistributedProject2\\src\\input.dat");
         try {
-            neighbors = processInputFile(file);
+            links = processInputFile(file);
+
         } catch (IOException ex) {
             System.err.println(ex);
         }
@@ -19,7 +22,7 @@ public class Floodmax {
 
     }
 
-    static HashMap<Integer, ArrayList<Integer>> processInputFile(File file) throws FileNotFoundException {
+    static HashMap<Integer, ArrayList<Connection>> processInputFile(File file) throws FileNotFoundException {
         if (!file.exists()) {
             System.out.println("The input file does not exist.");
             return null;
@@ -37,10 +40,12 @@ public class Floodmax {
         }
 
         HashMap<Integer, ArrayList<Integer>> neighborMap = new HashMap<>();
+        HashMap<Integer, ArrayList<Connection>> connections = new HashMap<>();
         int[] threadIDs = new int[numThreads];
         for (int i = 0; i < numThreads; i++) {
             threadIDs[i] = sc.nextInt();
             neighborMap.put(threadIDs[i], new ArrayList<>());
+            connections.put(threadIDs[i], new ArrayList<>());
         }
 
         for (int i = 0; i < numThreads; i++) {
@@ -48,8 +53,11 @@ public class Floodmax {
                 int connection = sc.nextInt();
                 if (connection == 1) {
                     ArrayList<Integer> friends = neighborMap.get(threadIDs[i]);
+                    ArrayList<Connection> connectionArrayList = connections.get(threadIDs[i]);
                     friends.add(threadIDs[j]);
+                    connectionArrayList.add(new Connection(threadIDs[i], threadIDs[j]));
                     neighborMap.put(threadIDs[i], friends);
+                    connections.put(threadIDs[i], connectionArrayList);
                 }
             }
         }
@@ -59,9 +67,8 @@ public class Floodmax {
             threads[i] = new MyThread(threadIDs[i], neighborMap.get(threadIDs[i]));
         }
         System.out.println(neighborMap.toString());
-        return neighborMap;
+        return connections;
     }
-
 }
 
 

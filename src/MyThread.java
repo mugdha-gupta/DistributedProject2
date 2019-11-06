@@ -11,20 +11,18 @@ import java.util.concurrent.CyclicBarrier;
 class MyThread extends Thread {
 
 
-    public int id;
+    public int myId;
     public int maxIdFound;
     int parent;
-    ArrayList<Integer> neighbors;
+    ArrayList<Connection> connections;
     int responseCounter = 0;
 
-    public MyThread(int my_id, ArrayList<Integer> my_neighbors) {
+    public MyThread(int my_id, ArrayList<Connection> my_neighbors) {
         //initialize our class variables
-
-        id = my_id;
+        myId = my_id;
         maxIdFound = my_id;
         parent = -1;
-        neighbors = my_neighbors;
-
+        connections = my_neighbors;
 
         //start from within constructor so main thread never has to call it
         start();
