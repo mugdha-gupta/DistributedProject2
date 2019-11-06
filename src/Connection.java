@@ -38,7 +38,7 @@ public class Connection {
             return false;
     }
 
-    public void setParentConnection(int myId){
+    public void hasParent(int myId){
         parentConnection.add(myId);
     }
 }

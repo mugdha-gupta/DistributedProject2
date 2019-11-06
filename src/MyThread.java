@@ -45,7 +45,9 @@ class MyThread extends Thread {
         System.out.println("receiving " + myId);
         recievedMessages.clear();
         for(Connection connection : connections){
-            recievedMessages.put(connection, connection.getMessage(myId));
+            Message message = connection.getMessage(myId);
+            if(message != null)
+                recievedMessages.put(connection, connection.getMessage(myId));
         }
     }
 
@@ -57,7 +59,7 @@ class MyThread extends Thread {
             if (message.type == INIT) {
                 if (maxIdFound < message.maxIdFound){
                     parent = message.senderid;
-                    connection.setParentConnection(myId);
+                    connection.hasParent(myId);
                     sendMessages(new Message(myId, parent, INIT));
                 }
                 else {

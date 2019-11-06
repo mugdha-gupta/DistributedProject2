@@ -11,7 +11,7 @@ public class Floodmax {
         HashMap<Integer, ArrayList<Connection>> neighbors;
         HashMap<Integer, ArrayList<Connection>> links;
 
-        File file = new File("C:\\Users\\Nymisha\\IdeaProjects\\DistributedProject2\\src\\input.dat");
+        File file = new File("C:\\Users\\mugdh\\gitviews\\DistributedProject2\\src\\input.dat");
         try {
             links = processInputFile(file);
 
