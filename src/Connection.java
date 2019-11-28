@@ -1,18 +1,15 @@
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Connection {
     private HashMap<Integer, Queue<Message>> input = new HashMap<>();
     private HashMap<Integer, Queue<Message>> output = new HashMap<>();
-    private HashSet<Integer> parentConnection = new HashSet<>();
+    private int idHasParentConnection = -1;
+    private AtomicInteger counter;
 
-    public Connection(int processId1, int processId2){
+    //initialize connection information
+    public Connection(int processId1, int processId2, AtomicInteger counter){
         Queue<Message> queue1 = new LinkedList<>();
         input.put(processId1, queue1);
         output.put(processId2, queue1);
@@ -21,24 +18,50 @@ public class Connection {
         input.put(processId2, queue2);
         output.put(processId1, queue2);
 
+        this.counter = counter;
     }
 
+    //function to send the message over the connection, given the source id and the message
+    //we wait the transmission time before sending the message
+    //and increment our counter to keep track of the total number of messages sent
     public void sendMessage(int myId, Message message){
+        Random rand = new Random();
+        int transmissionTime =   rand.nextInt(10)+1;
+        try {
+            TimeUnit.MILLISECONDS.sleep(transmissionTime);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         output.get(myId).add(message);
+
+        //nummessages ++
+        counter.getAndIncrement();
     }
 
     public Message getMessage(int myId){
-        return input.get(myId).poll();
+        Message message = input.get(myId).poll();
+        return message;
     }
 
+    //used to flag a connection as a parent edge so that we don't send duplicate messages
     public boolean isParentConnection(int myId){
-        if(parentConnection.contains(myId))
+        if(idHasParentConnection == myId)
             return true;
         else
             return false;
     }
 
+    //manipulation of the parent of the connection
     public void hasParent(int myId){
-        parentConnection.add(myId);
+        idHasParentConnection = myId;
+    }
+
+    //no longer is a parent connection for this id
+    public void removeParent(){
+        idHasParentConnection = -1;
+    }
+
+    public int getNumberMessages(){
+        return counter.get();
     }
 }
