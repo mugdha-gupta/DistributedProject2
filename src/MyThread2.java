@@ -7,7 +7,8 @@ class MyThread2 extends Thread {
     public final int INIT = 0;
     public final int ACCEPT = 1;
     public final int DECLINE = 2;
-    public final int LEADER = 3;
+    public final int COMPLETE = 3;
+    public final int LEADER = 4;
 
 
     public CyclicBarrier barrier;
@@ -18,10 +19,14 @@ class MyThread2 extends Thread {
     private ArrayList<Integer> children;
     public ArrayList<Connection> connections;
     public int responseCounter = 0;
+    public int acceptCounter = 0;
+    public int rejectCounter = 0;
+    public int completeCounter = 0;
     public int messagesSent = 0;
     public HashMap<Connection, Message> recievedMessages;
     public boolean updatedParent = true;
     public boolean leaderFound = false;
+    public boolean completed = false;
 
 
     public MyThread2(int my_id, ArrayList<Connection> my_neighbors, CyclicBarrier my_barrier) {
@@ -99,7 +104,7 @@ class MyThread2 extends Thread {
     public void processMessages() {
         receiveMessages();
         //System.out.println(myId + " " + recievedMessages.toString());
-        while (!recievedMessages.isEmpty()) {
+        while (!completed && responseCounter < connections.size()) {
             HashSet<Connection> connectionsToRemove = new HashSet<>();
             for (Connection connection : recievedMessages.keySet()) {
                 Message message = recievedMessages.get(connection);
@@ -113,6 +118,9 @@ class MyThread2 extends Thread {
                         sendMessages(new Message(myId, maxIdFound, INIT));
                         sendResponse(new Message(myId, maxIdFound, ACCEPT), connection);
                         responseCounter = 0;
+                        acceptCounter = 0;
+                        rejectCounter = 0;
+                        completeCounter = 0;
                     } else {
                         if (connection != null)
                             sendResponse(new Message(myId, maxIdFound, DECLINE), connection);
@@ -121,6 +129,7 @@ class MyThread2 extends Thread {
                 } else if (message.type == ACCEPT) {
                     if (maxIdFound == message.maxIdFound) {
                         responseCounter++;
+                        acceptCounter++;
                         children.add(message.senderid);
                         System.out.println(myId + "'s new child is " + message.senderid);
                     }
@@ -129,11 +138,20 @@ class MyThread2 extends Thread {
                 } else if (message.type == DECLINE) {
                     if (maxIdFound == message.maxIdFound) {
                         responseCounter++;
+                        rejectCounter++;
                         System.out.println(myId + " got rejected by " + message.senderid);
                     }
                 } else if (message.type == LEADER) {
                     leaderFound = true;
                     System.out.println(myId + " got notified the leader was found " + maxIdFound);
+
+                } else if (message.type == COMPLETE) {
+                    completeCounter++;
+                    System.out.println(myId + " got notified the leader was found " + maxIdFound);
+                    if (completeCounter == children.size()) {
+                        sendResponse(new Message(myId, maxIdFound, COMPLETE), parentConnection);
+                        System.out.println(myId + "i'm a completed internal node");
+                    }
 
                 }
 
@@ -148,6 +166,12 @@ class MyThread2 extends Thread {
 //        messagesSent = 0;
 //        if (parentConnection != null)
 //            sendResponse(new Message(myId, maxIdFound, ACCEPT), parentConnection);
+        if (rejectCounter == responseCounter) {
+            sendResponse(new Message(myId, maxIdFound, COMPLETE), parentConnection);
+            System.out.println(myId + "i'm a completed leaf");
+
+        }
+
         ackNack();
 
     }
