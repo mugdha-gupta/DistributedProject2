@@ -37,6 +37,8 @@ class MyThread3 extends Thread {
     public Set<Integer> setAck;
     boolean isIncremented = false;
 
+    CyclicBarrier barrier;
+
 
 
     public MyThread3(int my_id, ArrayList<Connection> my_neighbors, CyclicBarrier my_barrier, CountDownLatch my_latch) {
@@ -50,6 +52,7 @@ class MyThread3 extends Thread {
         children = new ArrayList<>();
         latch = my_latch;
         setAck = new HashSet<>();
+        barrier = my_barrier;
         //start from within constructor so main thread never has to call it
         start();
     }
@@ -63,6 +66,13 @@ class MyThread3 extends Thread {
 
         while (latch.getCount() > 0) {
             processMessages();
+            try {
+                barrier.await(); // At the end of the node's phases, it calls await on the cb which stops the node until the next round.
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (BrokenBarrierException e) {
+                e.printStackTrace();
+            }
         }
 
         System.out.println(myId + "completed ");
@@ -126,7 +136,6 @@ class MyThread3 extends Thread {
                 } else if (message.type == ACCEPT) {
                     if (maxIdFound == message.maxIdFound) {
                         responseCounter++;
-                        //acceptCounter++;
                         children.add(message.senderid);
                         System.out.println(myId + "'s new child is " + message.senderid);
                     }

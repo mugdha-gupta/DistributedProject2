@@ -4,6 +4,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -77,12 +78,25 @@ public class Floodmax {
     static void initializeThreads(HashMap<Integer, ArrayList<Connection>> connections){
         int numThreads = connections.keySet().size();
         Thread[] threads = new Thread[numThreads];
-        CyclicBarrier barrier = new CyclicBarrier(numThreads); //create cyclic barrier to synchronize rounds
+        CyclicBarrier barrier = new CyclicBarrier(numThreads+1); //create cyclic barrier to synchronize rounds
         CountDownLatch latch = new CountDownLatch(numThreads);
         int i = 0;
         for(int id : connections.keySet()){ //for each process
             threads[i] = new MyThread3(id, connections.get(id), barrier, latch); //create a thread, this will also start the thread
             i++;
+        }
+        while (latch.getCount() > 0) {
+
+            if (barrier.getNumberWaiting() == numThreads) {
+                try {
+                    barrier.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (BrokenBarrierException e) {
+                    e.printStackTrace();
+                }
+
+            }
         }
         return;
     }
