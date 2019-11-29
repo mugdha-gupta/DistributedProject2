@@ -50,16 +50,15 @@ class MyThread2 extends Thread {
             if (barrier.isBroken())
                 barrier.reset();
 
-            while (!leaderFound) {
 
 
-//                System.out.println(myId + " got here");
                 processMessages();
+                System.out.println(myId + "got here" );
 
-                barrier.await();
-                if (barrier.isBroken())
-                    barrier.reset();
-            }
+
+            barrier.await();
+            if (barrier.isBroken())
+                barrier.reset();
         } catch (InterruptedException | BrokenBarrierException e) {
             e.printStackTrace();
         }
@@ -100,7 +99,7 @@ class MyThread2 extends Thread {
     public void processMessages() {
         receiveMessages();
         //System.out.println(myId + " " + recievedMessages.toString());
-        while (responseCounter < messagesSent || !recievedMessages.isEmpty()) {
+        while (!recievedMessages.isEmpty()) {
             HashSet<Connection> connectionsToRemove = new HashSet<>();
             for (Connection connection : recievedMessages.keySet()) {
                 Message message = recievedMessages.get(connection);
@@ -111,8 +110,8 @@ class MyThread2 extends Thread {
                         setParent(message.senderid, connection);
                         if (!children.isEmpty())
                             children.clear();
-                        System.out.println(myId + "'s parent is " + parent + " max: " + maxIdFound);
                         sendMessages(new Message(myId, maxIdFound, INIT));
+                        sendResponse(new Message(myId, maxIdFound, ACCEPT), connection);
                         responseCounter = 0;
                     } else {
                         if (connection != null)
@@ -135,6 +134,7 @@ class MyThread2 extends Thread {
                 } else if (message.type == LEADER) {
                     leaderFound = true;
                     System.out.println(myId + " got notified the leader was found " + maxIdFound);
+
                 }
 
                 connectionsToRemove.add(connection);
@@ -153,13 +153,14 @@ class MyThread2 extends Thread {
     }
 
     public void ackNack(){
-        if (parent != -1){
+        if (parent != -1 && responseCounter == connections.size()-1){
             System.out.println(myId +"-->"+ parent +" MAX="+ maxIdFound);
             sendResponse(new Message(myId, maxIdFound, ACCEPT), parentConnection);
             leaderFound = true;
         }
-        else{
+        else if (parent != -1 && responseCounter == connections.size()){
             leaderFound = true;
+            System.out.println(myId +"I'm the leader!!");
             sendMessages(new Message(myId, maxIdFound, LEADER));
         }
     }
@@ -187,10 +188,7 @@ class MyThread2 extends Thread {
     //and if there already was a previous parent, remove that connection
     //and set the new parent connection
     public void setParent(int parentId, Connection connection) {
-        if (parent != -1) {
-            if (parentConnection != null)
-                sendResponse(new Message(myId, maxIdFound, DECLINE), parentConnection);
-        }
+
         parent = parentId;
         parentConnection = connection;
         for (Connection conn : connections) {
@@ -199,6 +197,8 @@ class MyThread2 extends Thread {
         }
         connection.hasParent(myId);
         updatedParent = true;
+
+        System.out.println(myId + "'s parent is " + parent + " max: " + maxIdFound);
     }
 
 }
