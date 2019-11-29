@@ -12,20 +12,17 @@ public class Floodmax {
     public static void main(String[] args) {
         HashMap<Integer, ArrayList<Integer>> neighborhood;
         HashMap<Integer, ArrayList<Connection>> connections;
-        int diameter;
-        Thread[] threads;
 
-        //input processing
-        if(args.length < 1){
-            System.out.println("No path for the input file given.");
-            return;
-        }
+//        //input processing
+//        if(args.length < 1){
+//            System.out.println("No path for the input file given.");
+//            return;
+//        }
 
-        File file = new File(args[0]);
+        File file = new File("C:\\Users\\Nymisha\\IdeaProjects\\DistributedProject2\\src\\input.dat");
         neighborhood = getNeighborhood(file); //get the neighbor map
-        diameter = findDiameter(neighborhood); //get the diameter from the neigbor map
         connections = createConnections(neighborhood); //get connections map from neighbor map
-        initializeThreads(connections, diameter); //initialize all threads
+        initializeThreads(connections); //initialize all threads
 
     }
 
@@ -75,48 +72,14 @@ public class Floodmax {
         return neighborMap;
     }
 
-    //fidn the diameter using the neigborhood
-    static int findDiameter(HashMap<Integer, ArrayList<Integer>> neighborhood){
-        int diameter =0;
-        for(int id : neighborhood.keySet()){ //for each process
-            int longestPath = getLongest(id, neighborhood); //find longest path to any node
-            if(longestPath > diameter)
-                diameter =longestPath; //if the longest path is bigger than current diameter, set diameter to lengest path
-        }
-        return diameter;
-    }
-
-    //brute force solution to find the length of path to furthest vertex
-    static int getLongest(int id, HashMap<Integer, ArrayList<Integer>> neighborhood){
-        HashSet<Integer> visited = new HashSet<>(); //set of visited nodes starts at empty
-        visited.add(id); //add current id to the visited node
-        int dist = 0;
-        while (visited.size() < neighborhood.keySet().size()){ //while we haven't visited all nodes
-            HashSet<Integer> toAdd = new HashSet<>();
-            for(int visitedId : visited){
-                ArrayList<Integer> neighbors = neighborhood.get(visitedId); //get all nodes reachable from visited nodes
-                for(int neighbor : neighbors){
-                    if(!visited.contains(neighbor)){ //if that node is not already in visited add it
-                        toAdd.add(neighbor);
-                    }
-                }
-            }
-            for(int ad : toAdd) //using to add to avoid concurrent modification error
-                visited.add(ad);
-            toAdd.clear();
-            dist++; //we travelled one length
-        }
-        return dist;
-    }
-
     //initialize all the threads
-    static void initializeThreads(HashMap<Integer, ArrayList<Connection>> connections, int diameter){
+    static void initializeThreads(HashMap<Integer, ArrayList<Connection>> connections){
         int numThreads = connections.keySet().size();
         Thread[] threads = new Thread[numThreads];
-        CyclicBarrier barrier = new CyclicBarrier(numThreads); //create cyclic barrier to syncronize rounds
+        CyclicBarrier barrier = new CyclicBarrier(numThreads); //create cyclic barrier to synchronize rounds
         int i = 0;
         for(int id : connections.keySet()){ //for each process
-            threads[i] = new MyThread(id, connections.get(id), barrier, diameter); //create a thread, this will also start the thread
+            threads[i] = new MyThread2(id, connections.get(id), barrier); //create a thread, this will also start the thread
             i++;
         }
         return;
