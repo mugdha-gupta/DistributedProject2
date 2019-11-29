@@ -8,7 +8,8 @@ class MyThread2 extends Thread {
     public final int ACCEPT = 1;
     public final int DECLINE = 2;
     public final int COMPLETE = 3;
-    public final int LEADER = 4;
+    public final int NOTMYPARENT = 3;
+    public final int LEADER = 3;
 
 
     public CyclicBarrier barrier;
@@ -55,15 +56,17 @@ class MyThread2 extends Thread {
             if (barrier.isBroken())
                 barrier.reset();
 
-
-
+            //while (!completed) {
                 processMessages();
-                System.out.println(myId + "got here" );
+//                barrier.await();
+//                if (barrier.isBroken())
+//                    barrier.reset();
+            //}
+            System.out.println(myId + "completed " + completed );
 
 
-            barrier.await();
-            if (barrier.isBroken())
-                barrier.reset();
+
+
         } catch (InterruptedException | BrokenBarrierException e) {
             e.printStackTrace();
         }
@@ -71,7 +74,7 @@ class MyThread2 extends Thread {
         System.out.println("Thread: " + myId + "\tLeader found: " + maxIdFound);
         if(parent == -1){
             for(Connection connection : connections){
-                System.out.println("There were " + connection.getNumberMessages() + " messages sent.");
+                System.out.println("There were " + connection.getNumberMessages() + " messages sent." + myId);
                 break;
             }
         }
@@ -104,7 +107,7 @@ class MyThread2 extends Thread {
     public void processMessages() {
         receiveMessages();
         //System.out.println(myId + " " + recievedMessages.toString());
-        while (!completed && responseCounter < connections.size()) {
+        while (!recievedMessages.isEmpty() && !completed) {
             HashSet<Connection> connectionsToRemove = new HashSet<>();
             for (Connection connection : recievedMessages.keySet()) {
                 Message message = recievedMessages.get(connection);
@@ -113,8 +116,7 @@ class MyThread2 extends Thread {
                     if (maxIdFound < message.maxIdFound) {
                         maxIdFound = message.maxIdFound;
                         setParent(message.senderid, connection);
-                        if (!children.isEmpty())
-                            children.clear();
+                        children.clear();
                         sendMessages(new Message(myId, maxIdFound, INIT));
                         sendResponse(new Message(myId, maxIdFound, ACCEPT), connection);
                         responseCounter = 0;
@@ -137,20 +139,29 @@ class MyThread2 extends Thread {
                     responseCounter++;
                 } else if (message.type == DECLINE) {
                     if (maxIdFound == message.maxIdFound) {
-                        responseCounter++;
                         rejectCounter++;
                         System.out.println(myId + " got rejected by " + message.senderid);
-                    }
-                } else if (message.type == LEADER) {
-                    leaderFound = true;
-                    System.out.println(myId + " got notified the leader was found " + maxIdFound);
+                        if (children.contains(message.senderid)) {
+                            acceptCounter--;
+                            children.remove(message.senderid);
+                            System.out.println(myId + " lost their child " + message.senderid);
+                        }
+                        else{
+                            responseCounter++;
+                        }
+                        if (rejectCounter == connections.size()){
+                            sendResponse(new Message(myId, maxIdFound, COMPLETE), parentConnection);
+                            completed = true;
+                        }
 
+                    }
                 } else if (message.type == COMPLETE) {
                     completeCounter++;
-                    System.out.println(myId + " got notified the leader was found " + maxIdFound);
+                    System.out.println(myId + "'s child " + message.senderid + " completed max: " + maxIdFound);
                     if (completeCounter == children.size()) {
                         sendResponse(new Message(myId, maxIdFound, COMPLETE), parentConnection);
                         System.out.println(myId + "i'm a completed internal node");
+                        completed = true;
                     }
 
                 }
@@ -166,26 +177,22 @@ class MyThread2 extends Thread {
 //        messagesSent = 0;
 //        if (parentConnection != null)
 //            sendResponse(new Message(myId, maxIdFound, ACCEPT), parentConnection);
-        if (rejectCounter == responseCounter) {
-            sendResponse(new Message(myId, maxIdFound, COMPLETE), parentConnection);
-            System.out.println(myId + "i'm a completed leaf");
 
-        }
 
-        ackNack();
-
+        //ackNack();
+        System.out.println(myId + recievedMessages.toString());
     }
 
     public void ackNack(){
-        if (parent != -1 && responseCounter == connections.size()-1){
+        if (parent != -1 && completeCounter == connections.size()-1){
             System.out.println(myId +"-->"+ parent +" MAX="+ maxIdFound);
-            sendResponse(new Message(myId, maxIdFound, ACCEPT), parentConnection);
+            //sendResponse(new Message(myId, maxIdFound, ACCEPT), parentConnection);
             leaderFound = true;
         }
-        else if (parent != -1 && responseCounter == connections.size()){
+        else if (parent == -1 && completeCounter == connections.size()){
             leaderFound = true;
             System.out.println(myId +"I'm the leader!!");
-            sendMessages(new Message(myId, maxIdFound, LEADER));
+            //sendMessages(new Message(myId, maxIdFound, LEADER));
         }
     }
 
@@ -212,6 +219,8 @@ class MyThread2 extends Thread {
     //and if there already was a previous parent, remove that connection
     //and set the new parent connection
     public void setParent(int parentId, Connection connection) {
+
+        sendResponse(new Message(myId, maxIdFound, NOTMYPARENT), connection);
 
         parent = parentId;
         parentConnection = connection;

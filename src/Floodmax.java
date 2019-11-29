@@ -19,7 +19,7 @@ public class Floodmax {
 //            return;
 //        }
 
-        File file = new File("C:\\Users\\Nymisha\\IdeaProjects\\DistributedProject2\\src\\input.dat");
+        File file = new File("C:\\Users\\Nymisha\\IdeaProjects\\DistributedProject2\\src\\input2.dat");
         neighborhood = getNeighborhood(file); //get the neighbor map
         connections = createConnections(neighborhood); //get connections map from neighbor map
         initializeThreads(connections); //initialize all threads
