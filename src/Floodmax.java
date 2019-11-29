@@ -4,6 +4,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,7 +20,7 @@ public class Floodmax {
 //            return;
 //        }
 
-        File file = new File("C:\\Users\\Nymisha\\IdeaProjects\\DistributedProject2\\src\\input2.dat");
+        File file = new File("C:\\Users\\Nymisha\\IdeaProjects\\DistributedProject2\\src\\input.dat");
         neighborhood = getNeighborhood(file); //get the neighbor map
         connections = createConnections(neighborhood); //get connections map from neighbor map
         initializeThreads(connections); //initialize all threads
@@ -77,9 +78,10 @@ public class Floodmax {
         int numThreads = connections.keySet().size();
         Thread[] threads = new Thread[numThreads];
         CyclicBarrier barrier = new CyclicBarrier(numThreads); //create cyclic barrier to synchronize rounds
+        CountDownLatch latch = new CountDownLatch(numThreads);
         int i = 0;
         for(int id : connections.keySet()){ //for each process
-            threads[i] = new MyThread2(id, connections.get(id), barrier); //create a thread, this will also start the thread
+            threads[i] = new MyThread3(id, connections.get(id), barrier, latch); //create a thread, this will also start the thread
             i++;
         }
         return;
