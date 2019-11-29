@@ -104,13 +104,14 @@ class MyThread2 extends Thread {
             HashSet<Connection> connectionsToRemove = new HashSet<>();
             for (Connection connection : recievedMessages.keySet()) {
                 Message message = recievedMessages.get(connection);
-                System.out.println(myId + " from " + message.senderid + " type: " + message.type + " max: " + message.maxIdFound );
+                System.out.println(myId + " from: " + message.senderid + " type: " + message.type + "  cur max: " + maxIdFound + " message max: " + message.maxIdFound);
                 if (message.type == INIT) {
                     if (maxIdFound < message.maxIdFound) {
                         maxIdFound = message.maxIdFound;
                         setParent(message.senderid, connection);
                         if (!children.isEmpty())
                             children.clear();
+                        System.out.println(myId + "'s parent is " + parent + " max: " + maxIdFound);
                         sendMessages(new Message(myId, maxIdFound, INIT));
                         responseCounter = 0;
                     } else {
@@ -122,15 +123,18 @@ class MyThread2 extends Thread {
                     if (maxIdFound == message.maxIdFound) {
                         responseCounter++;
                         children.add(message.senderid);
+                        System.out.println(myId + "'s new child is " + message.senderid);
                     }
 
                     responseCounter++;
                 } else if (message.type == DECLINE) {
                     if (maxIdFound == message.maxIdFound) {
                         responseCounter++;
+                        System.out.println(myId + " got rejected by " + message.senderid);
                     }
                 } else if (message.type == LEADER) {
                     leaderFound = true;
+                    System.out.println(myId + " got notified the leader was found " + maxIdFound);
                 }
 
                 connectionsToRemove.add(connection);
@@ -152,6 +156,7 @@ class MyThread2 extends Thread {
         if (parent != -1){
             System.out.println(myId +"-->"+ parent +" MAX="+ maxIdFound);
             sendResponse(new Message(myId, maxIdFound, ACCEPT), parentConnection);
+            leaderFound = true;
         }
         else{
             leaderFound = true;
