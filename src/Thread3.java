@@ -74,7 +74,13 @@ class MyThread3 extends Thread {
                 e.printStackTrace();
             }
         }
-
+        try {
+            barrier.await(); // At the end of the node's phases, it calls await on the cb which stops the node until the next round.
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (BrokenBarrierException e) {
+            e.printStackTrace();
+        }
         System.out.println(myId + "completed ");
 
 
@@ -113,8 +119,7 @@ class MyThread3 extends Thread {
 
     public void processMessages() {
         receiveMessages();
-
-        while (!recievedMessages.isEmpty()) {
+        if(!recievedMessages.isEmpty()) {
             HashSet<Connection> connectionsToRemove = new HashSet<>();
 
             for (Connection connection : recievedMessages.keySet()) {
@@ -157,9 +162,9 @@ class MyThread3 extends Thread {
     }
 
     public void ackNack(){
-        if (parent != -1 && responseCounter == connections.size()){
+        if (parent != -1 && responseCounter >= connections.size()-1){
 
-            if(setAck.add(parent)){
+            if(setAck.add(this.maxIdFound)){
                 System.out.println(myId +"-->"+ parent +" MAX="+ maxIdFound);
                 sendResponse(new Message(myId, maxIdFound, ACCEPT), parentConnection);
 
@@ -174,7 +179,6 @@ class MyThread3 extends Thread {
         else if (parent == -1 && responseCounter == connections.size()){
 
             System.out.println(myId +"I'm the leader!!");
-            //sendMessages(new Message(myId, maxIdFound, LEADER));
             latch.countDown();
         }
     }
