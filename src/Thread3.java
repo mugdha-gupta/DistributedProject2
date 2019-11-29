@@ -9,18 +9,31 @@ class MyThread3 extends Thread {
     public final int ACCEPT = 1;
     public final int DECLINE = 2;
 
-
-    public CyclicBarrier barrier;
+    // tells us when processes have sent an acknowledge message
     public CountDownLatch latch;
+
+    // process variables
     public int myId;
     public int maxIdFound;
     public int parent;
+
+    // to make sending parent message easier
     public Connection parentConnection;
+
+    // keep track of what children i send message to
     private ArrayList<Integer> children;
+
+    // to keep track of all connections i hvae
     public ArrayList<Connection> connections;
+
+    // for termination with convergecast
     public int responseCounter = 0;
     public int messagesSent = 0;
+
+    // our "inbox"
     public HashMap<Connection, Message> recievedMessages;
+
+    // the people we've sent ack in past
     public Set<Integer> setAck;
     boolean isIncremented = false;
 
@@ -34,7 +47,6 @@ class MyThread3 extends Thread {
         parentConnection = null;
         connections = my_neighbors;
         recievedMessages = new HashMap<>();
-        barrier = my_barrier;
         children = new ArrayList<>();
         latch = my_latch;
         setAck = new HashSet<>();
@@ -47,22 +59,14 @@ class MyThread3 extends Thread {
     // After diam rounds, all threads will have the correct leader id as maxIdFound
     public void run() {
 
-        try {
-            barrier.await();
-            if (barrier.isBroken())
-                barrier.reset();
+        sendMessages(new Message(myId, myId, INIT));
 
-            sendMessages(new Message(myId, myId, INIT));
-
-            while (latch.getCount() > 0) {
-                processMessages();
-            }
-
-            System.out.println(myId + "completed ");
-
-        } catch (InterruptedException | BrokenBarrierException e) {
-            e.printStackTrace();
+        while (latch.getCount() > 0) {
+            processMessages();
         }
+
+        System.out.println(myId + "completed ");
+
 
         System.out.println("Thread: " + myId + "\tLeader found: " + maxIdFound);
         if(parent == -1){
@@ -99,11 +103,13 @@ class MyThread3 extends Thread {
 
     public void processMessages() {
         receiveMessages();
+
         while (!recievedMessages.isEmpty()) {
             HashSet<Connection> connectionsToRemove = new HashSet<>();
+
             for (Connection connection : recievedMessages.keySet()) {
                 Message message = recievedMessages.get(connection);
-                System.out.println(myId + " from: " + message.senderid + " type: " + message.type + "  cur max: " + maxIdFound + " message max: " + message.maxIdFound);
+                //System.out.println(myId + " from: " + message.senderid + " type: " + message.type + "  cur max: " + maxIdFound + " message max: " + message.maxIdFound);
                 if (message.type == INIT) {
                     if (maxIdFound < message.maxIdFound) {
                         maxIdFound = message.maxIdFound;
@@ -127,55 +133,24 @@ class MyThread3 extends Thread {
 
                 } else if (message.type == DECLINE) {
                     if (maxIdFound == message.maxIdFound) {
-                        //rejectCounter++;
                         responseCounter++;
-//                        System.out.println(myId + " got rejected by " + message.senderid);
-//                        if (children.contains(message.senderid)) {
-//                            acceptCounter--;
-//                            children.remove(message.senderid);
-//                            System.out.println(myId + " lost their child " + message.senderid);
-//                        }
-//                        else{
-//                            responseCounter++;
-//                        }
-//                        if (rejectCounter == connections.size()){
-//                            sendResponse(new Message(myId, maxIdFound, COMPLETE), parentConnection);
-//                            completed = true;
-//                        }
-
                     }
-                } /*else if (message.type == COMPLETE) {
-                    completeCounter++;
-                    System.out.println(myId + "'s child " + message.senderid + " completed max: " + maxIdFound);
-                    if (completeCounter == children.size()) {
-                        sendResponse(new Message(myId, maxIdFound, COMPLETE), parentConnection);
-                        System.out.println(myId + "i'm a completed internal node");
-                        completed = true;
-                    }
-
-                }*/
+                }
 
                 connectionsToRemove.add(connection);
             }
             for (Connection connection : connectionsToRemove)
                 recievedMessages.remove(connection);
             connectionsToRemove.clear();
-            receiveMessages();
         }
-//        responseCounter = 0;
-//        messagesSent = 0;
-//        if (parentConnection != null)
-//            sendResponse(new Message(myId, maxIdFound, ACCEPT), parentConnection);
-
 
         ackNack();
-        //System.out.println(myId + recievedMessages.toString());
     }
 
     public void ackNack(){
-        if (parent != -1 && responseCounter == connections.size()-1){
+        if (parent != -1 && responseCounter == connections.size()){
 
-            if(setAck.add(this.maxIdFound)){
+            if(setAck.add(parent)){
                 System.out.println(myId +"-->"+ parent +" MAX="+ maxIdFound);
                 sendResponse(new Message(myId, maxIdFound, ACCEPT), parentConnection);
 
