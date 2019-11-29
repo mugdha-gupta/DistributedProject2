@@ -11,6 +11,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Floodmax {
 
+    static Synchronizer sync;
+    static CyclicBarrier cb;
+
     public static void main(String[] args) {
         HashMap<Integer, ArrayList<Integer>> neighborhood;
         HashMap<Integer, ArrayList<Connection>> connections;
@@ -80,9 +83,10 @@ public class Floodmax {
         Thread[] threads = new Thread[numThreads];
         CyclicBarrier barrier = new CyclicBarrier(numThreads+1); //create cyclic barrier to synchronize rounds
         CountDownLatch latch = new CountDownLatch(numThreads);
+        sync = new Synchronizer();
         int i = 0;
         for(int id : connections.keySet()){ //for each process
-            threads[i] = new MyThread3(id, connections.get(id), barrier, latch); //create a thread, this will also start the thread
+            threads[i] = new MyThread3(id, connections.get(id), barrier, latch, sync); //create a thread, this will also start the thread
             i++;
         }
         while (latch.getCount() > 0) {
@@ -98,6 +102,8 @@ public class Floodmax {
 
             }
         }
+        System.out.println("Complete.");
+        System.exit(0);
         return;
     }
 
