@@ -25,7 +25,6 @@ class MyThread3 extends Thread {
 
     // to keep track of all connections i hvae
     public ArrayList<Connection> connections;
-
     // for termination with convergecast
     public int responseCounter = 0;
     public int messagesSent = 0;
@@ -81,13 +80,12 @@ class MyThread3 extends Thread {
         } catch (BrokenBarrierException e) {
             e.printStackTrace();
         }
-        System.out.println(myId + "completed ");
 
 
         System.out.println("Thread: " + myId + "\tLeader found: " + maxIdFound);
         if(parent == -1){
             for(Connection connection : connections){
-                System.out.println("There were " + connection.getNumberMessages() + " messages sent." + myId);
+                System.out.println("There were " + connection.getNumberMessages() + " messages sent.");
                 break;
             }
         }
@@ -142,7 +140,6 @@ class MyThread3 extends Thread {
                     if (maxIdFound == message.maxIdFound) {
                         responseCounter++;
                         children.add(message.senderid);
-                        System.out.println(myId + "'s new child is " + message.senderid);
                     }
 
                 } else if (message.type == DECLINE) {
@@ -176,10 +173,11 @@ class MyThread3 extends Thread {
 
 
         }
-        else if (parent == -1 && responseCounter == connections.size()){
+        else if (parent == -1 && responseCounter == connections.size() && !isIncremented){
 
             System.out.println(myId +"I'm the leader!!");
             latch.countDown();
+            isIncremented = true;
         }
     }
 
@@ -216,7 +214,6 @@ class MyThread3 extends Thread {
         }
         connection.hasParent(myId);
 
-        System.out.println(myId + "'s parent is " + parent + " max: " + maxIdFound);
     }
 
 }
