@@ -38,11 +38,10 @@ class MyThread3 extends Thread {
     boolean isIncremented = false;
 
     CyclicBarrier barrier;
-    Synchronizer sync;
 
 
 
-    public MyThread3(int my_id, ArrayList<Connection> my_neighbors, CyclicBarrier my_barrier, CountDownLatch my_latch, Synchronizer my_sync) {
+    public MyThread3(int my_id, ArrayList<Connection> my_neighbors, CyclicBarrier my_barrier, CountDownLatch my_latch) {
         //initialize our class variables
         myId = my_id;
         maxIdFound = my_id;
@@ -54,7 +53,6 @@ class MyThread3 extends Thread {
         latch = my_latch;
         setAck = new HashSet<>();
         barrier = my_barrier;
-        sync = my_sync;
         //start from within constructor so main thread never has to call it
         start();
     }
@@ -66,7 +64,7 @@ class MyThread3 extends Thread {
 
         sendMessages(new Message(myId, myId, INIT));
 
-        while (sync.running) {
+        while (latch.getCount() > 0) {
             processMessages();
             try {
                 barrier.await(); // At the end of the node's phases, it calls await on the cb which stops the node until the next round.
@@ -76,7 +74,13 @@ class MyThread3 extends Thread {
                 e.printStackTrace();
             }
         }
-
+        try {
+            barrier.await(); // At the end of the node's phases, it calls await on the cb which stops the node until the next round.
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (BrokenBarrierException e) {
+            e.printStackTrace();
+        }
         System.out.println(myId + "completed ");
 
 
@@ -115,7 +119,7 @@ class MyThread3 extends Thread {
 
     public void processMessages() {
         receiveMessages();
-        if (!recievedMessages.isEmpty()) {
+        if(!recievedMessages.isEmpty()) {
             HashSet<Connection> connectionsToRemove = new HashSet<>();
 
             for (Connection connection : recievedMessages.keySet()) {
@@ -127,6 +131,7 @@ class MyThread3 extends Thread {
                         setParent(message.senderid, connection);
                         children.clear();
                         sendMessages(new Message(myId, maxIdFound, INIT));
+                        //sendResponse(new Message(myId, maxIdFound, ACCEPT), connection);
                         responseCounter = 0;
                     } else {
                         if (connection != null)
@@ -137,7 +142,7 @@ class MyThread3 extends Thread {
                     if (maxIdFound == message.maxIdFound) {
                         responseCounter++;
                         children.add(message.senderid);
-                        //System.out.println(myId + "'s new child is " + message.senderid);
+                        System.out.println(myId + "'s new child is " + message.senderid);
                     }
 
                 } else if (message.type == DECLINE) {
@@ -157,9 +162,9 @@ class MyThread3 extends Thread {
     }
 
     public void ackNack(){
-        if (parent != -1 && responseCounter == connections.size()-1){
+        if (parent != -1 && responseCounter >= connections.size()-1){
 
-            if(setAck.add(maxIdFound)){
+            if(setAck.add(this.maxIdFound)){
                 System.out.println(myId +"-->"+ parent +" MAX="+ maxIdFound);
                 sendResponse(new Message(myId, maxIdFound, ACCEPT), parentConnection);
 

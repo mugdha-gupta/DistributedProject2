@@ -11,9 +11,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Floodmax {
 
-    static Synchronizer sync;
-    static CyclicBarrier cb;
-
     public static void main(String[] args) {
         HashMap<Integer, ArrayList<Integer>> neighborhood;
         HashMap<Integer, ArrayList<Connection>> connections;
@@ -24,7 +21,7 @@ public class Floodmax {
 //            return;
 //        }
 
-        File file = new File("C:\\Users\\Nymisha\\IdeaProjects\\DistributedProject2\\src\\input.dat");
+        File file = new File("C:\\Users\\mugdh\\gitviews\\DistributedProject2\\src\\input.dat");
         neighborhood = getNeighborhood(file); //get the neighbor map
         connections = createConnections(neighborhood); //get connections map from neighbor map
         initializeThreads(connections); //initialize all threads
@@ -83,28 +80,27 @@ public class Floodmax {
         Thread[] threads = new Thread[numThreads];
         CyclicBarrier barrier = new CyclicBarrier(numThreads+1); //create cyclic barrier to synchronize rounds
         CountDownLatch latch = new CountDownLatch(numThreads);
-        sync = new Synchronizer();
         int i = 0;
         for(int id : connections.keySet()){ //for each process
-            threads[i] = new MyThread3(id, connections.get(id), barrier, latch, sync); //create a thread, this will also start the thread
+            threads[i] = new MyThread3(id, connections.get(id), barrier, latch); //create a thread, this will also start the thread
             i++;
         }
         while (latch.getCount() > 0) {
-
-            if (barrier.getNumberWaiting() == numThreads) {
-                try {
-                    barrier.await();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (BrokenBarrierException e) {
-                    e.printStackTrace();
-                }
-
-            }
+            barrierAwait(barrier);
+            System.out.println('1');
         }
-        System.out.println("Complete.");
-        System.exit(0);
+        System.out.println('2');
+        barrierAwait(barrier);
+
         return;
+    }
+
+    private static void barrierAwait(CyclicBarrier barrier){
+        try {
+            barrier.await();
+        } catch (InterruptedException | BrokenBarrierException e) {
+            e.printStackTrace();
+        }
     }
 
     //create the connection map
