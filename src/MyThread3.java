@@ -39,6 +39,8 @@ class MyThread3 extends Thread {
     private HashSet<Connection> connectionsLeftToReceiveFrom;
     private HashSet<Connection> connectionsToSendMessagesTo;
 
+    Boolean leaderFound = false;
+
     MyThread3(int my_id, ArrayList<Connection> my_neighbors, CyclicBarrier my_barrier, CountDownLatch my_latch) {
         //initialize our class variables
         myId = my_id;
@@ -64,7 +66,7 @@ class MyThread3 extends Thread {
 
         sendMessages(new Message(myId, myId, Message.INIT));
 
-        while (latch.getCount() > 0) {
+        while (!leaderFound) {
             connectionsLeftToReceiveFrom.addAll(connections);
             connectionsToSendMessagesTo.addAll(connections);
             receiveMessages(); //after this we should have a message from every connection
@@ -79,10 +81,7 @@ class MyThread3 extends Thread {
 
         System.out.println("Thread: " + myId + "\tLeader found: " + maxIdFound);
         if(parent == -1){
-            for(Connection connection : connections){
-                System.out.println("There were " + connection.getNumberMessages() + " messages sent." + myId);
-                break;
-            }
+            System.out.println("There were " + Connection.counter + " messages sent.");
         }
 
 
@@ -92,6 +91,7 @@ class MyThread3 extends Thread {
     //check all the connections to see fi any messages have been sent to this thread
     //if there is a message, add it to the list of messages we need to process
     private void receiveMessages() {
+
 
         HashSet<Connection> connectionsToRemove = new HashSet<>();
         while(true) {
@@ -150,6 +150,15 @@ class MyThread3 extends Thread {
                         responseCounter++;
                     }
                 }
+                else if (message.type == Message.LEADER) {
+
+                    if (maxIdFound == message.maxIdFound) {
+                        sendLeaderMessage(new Message(myId, maxIdFound, Message.LEADER));
+                    }
+                    else{
+                        System.out.println("this is wrong");
+                    }
+                }
 
                 connectionsToRemove.add(connection);
             }
@@ -177,6 +186,9 @@ class MyThread3 extends Thread {
         }
         else if (parent == -1 && responseCounter == connections.size()){
             latch.countDown();
+            sendLeaderMessage(new Message(myId, maxIdFound, Message.LEADER));
+
+
         }
 
         sendDummies();
@@ -191,6 +203,26 @@ class MyThread3 extends Thread {
                 messagesSent++;
             }
         }
+    }
+
+    public void sendLeaderMessage(Message message) {
+        for (Connection connection : connections) {
+            if (!connection.isParentConnection(myId)) {
+                connection.sendMessage(myId, message);
+                connectionsToSendMessagesTo.remove(connection);
+            }
+        }
+        connections.clear();
+        responseCounter = 0;
+        leaderFound = true;
+
+    }
+
+    public void receiveLeaderMessage(Message message, Connection connection) {
+
+
+
+
     }
 
     public void sendDummies() {

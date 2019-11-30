@@ -7,7 +7,7 @@ public class Connection {
     private HashMap<Integer, Queue<Message>> input = new HashMap<>();
     private HashMap<Integer, Queue<Message>> output = new HashMap<>();
     private int idHasParentConnection = -1;
-    private AtomicInteger counter;
+    public static AtomicInteger counter;
 
     //initialize connection information
     public Connection(int processId1, int processId2, AtomicInteger counter){
