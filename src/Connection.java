@@ -29,7 +29,8 @@ public class Connection {
         message.sendMessage();
         output.get(myId).add(message); //sends messages
         //nummessages ++
-        counter.getAndIncrement();
+        if(message.type != 3)
+            counter.getAndIncrement();
     }
 
     //we return any ready messages
