@@ -5,46 +5,41 @@ import java.util.concurrent.CyclicBarrier;
 
 class MyThread3 extends Thread {
 
-    public final int INIT = 0;
-    public final int ACCEPT = 1;
-    public final int DECLINE = 2;
-    public final int DUMMY = 3;
-
     // tells us when processes have sent an acknowledge message
-    public CountDownLatch latch;
+    private CountDownLatch latch;
 
     // process variables
-    public int myId;
-    public int maxIdFound;
-    public int parent;
+    private int myId;
+    private int maxIdFound;
+    private int parent;
 
     // to make sending parent message easier
-    public Connection parentConnection;
+    private Connection parentConnection;
 
     // keep track of what children i send message to
     private ArrayList<Integer> children;
 
     // to keep track of all connections i hvae
-    public ArrayList<Connection> connections;
+    private ArrayList<Connection> connections;
 
     // for termination with convergecast
-    public int responseCounter = 0;
-    public int messagesSent = 0;
+    private int responseCounter = 0;
+    private int messagesSent = 0;
 
     // our "inbox"
-    public HashMap<Connection, Message> recievedMessages;
+    private HashMap<Connection, Message> recievedMessages;
 
     // the people we've sent ack in past
-    public Set<Integer> setAck;
-    boolean isIncremented = false;
+    private Set<Integer> setAck;
+    private boolean isIncremented = false;
 
-    CyclicBarrier barrier;
+    private CyclicBarrier barrier;
 
     // messages we've received from
-    HashSet<Connection> connectionsLeftToReceiveFrom;
-    HashSet<Connection> connectionsToSendMessagesTo;
+    private HashSet<Connection> connectionsLeftToReceiveFrom;
+    private HashSet<Connection> connectionsToSendMessagesTo;
 
-    public MyThread3(int my_id, ArrayList<Connection> my_neighbors, CyclicBarrier my_barrier, CountDownLatch my_latch) {
+    MyThread3(int my_id, ArrayList<Connection> my_neighbors, CyclicBarrier my_barrier, CountDownLatch my_latch) {
         //initialize our class variables
         myId = my_id;
         maxIdFound = my_id;
@@ -67,7 +62,7 @@ class MyThread3 extends Thread {
     // After diam rounds, all threads will have the correct leader id as maxIdFound
     public void run() {
 
-        sendMessages(new Message(myId, myId, INIT));
+        sendMessages(new Message(myId, myId, Message.INIT));
 
         while (latch.getCount() > 0) {
             connectionsLeftToReceiveFrom.addAll(connections);
@@ -78,9 +73,7 @@ class MyThread3 extends Thread {
 
         try {
             barrier.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (BrokenBarrierException e) {
+        } catch (InterruptedException | BrokenBarrierException e) {
             e.printStackTrace();
         }
 
@@ -98,7 +91,8 @@ class MyThread3 extends Thread {
 
     //check all the connections to see fi any messages have been sent to this thread
     //if there is a message, add it to the list of messages we need to process
-    public void receiveMessages() {
+    private void receiveMessages() {
+
         HashSet<Connection> connectionsToRemove = new HashSet<>();
         while(true) {
             for (Connection connection : connectionsLeftToReceiveFrom) {
@@ -133,25 +127,25 @@ class MyThread3 extends Thread {
 
             for (Connection connection : recievedMessages.keySet()) {
                 Message message = recievedMessages.get(connection);
-                if (message.type == INIT) {
+                if (message.type == Message.INIT) {
                     if (maxIdFound < message.maxIdFound) {
                         maxIdFound = message.maxIdFound;
                         setParent(message.senderid, connection);
                         children.clear();
-                        sendMessages(new Message(myId, maxIdFound, INIT));
+                        sendMessages(new Message(myId, maxIdFound, Message.INIT));
                         responseCounter = 0;
                     } else {
                         if (connection != null)
-                            sendResponse(new Message(myId, maxIdFound, DECLINE), connection);
+                            sendResponse(new Message(myId, maxIdFound, Message.DECLINE), connection);
                     }
 
-                } else if (message.type == ACCEPT) {
+                } else if (message.type == Message.ACCEPT) {
                     if (maxIdFound == message.maxIdFound) {
                         responseCounter++;
                         children.add(message.senderid);
                     }
 
-                } else if (message.type == DECLINE) {
+                } else if (message.type == Message.DECLINE) {
                     if (maxIdFound == message.maxIdFound) {
                         responseCounter++;
                     }
@@ -171,7 +165,7 @@ class MyThread3 extends Thread {
         if (parent != -1 && responseCounter == connections.size()-1){
 
             if(setAck.add(this.maxIdFound)){
-                sendResponse(new Message(myId, maxIdFound, ACCEPT), parentConnection);
+                sendResponse(new Message(myId, maxIdFound, Message.ACCEPT), parentConnection);
 
             }
             if(!isIncremented){
@@ -201,7 +195,7 @@ class MyThread3 extends Thread {
 
     public void sendDummies() {
         for(Connection connection : connectionsToSendMessagesTo){
-            connection.sendMessage(myId, new Message(myId, maxIdFound, DUMMY));
+            connection.sendMessage(myId, new Message(myId, maxIdFound, Message.DUMMY));
         }
         connectionsToSendMessagesTo.clear();
     }

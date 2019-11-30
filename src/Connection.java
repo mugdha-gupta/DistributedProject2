@@ -28,8 +28,8 @@ public class Connection {
     public void sendMessage(int myId, Message message){
         message.sendMessage();
         output.get(myId).add(message); //sends messages
-        //nummessages ++
-        if(message.type != 3)
+
+        if(message.type != Message.DUMMY)
             counter.getAndIncrement();
     }
 

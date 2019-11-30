@@ -6,6 +6,12 @@ import java.util.Random;
 //for communication
 public class Message {
 
+    static final int INIT = 0;
+    static final int ACCEPT = 1;
+    static final int DECLINE = 2;
+    static final int DUMMY = 3;
+    static final int LEADER = 4;
+
     int senderid;
     int maxIdFound;
     int type;
