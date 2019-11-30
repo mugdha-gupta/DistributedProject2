@@ -1,3 +1,4 @@
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -22,25 +23,22 @@ public class Connection {
     }
 
     //function to send the message over the connection, given the source id and the message
-    //we wait the transmission time before sending the message
+    //we send message
     //and increment our counter to keep track of the total number of messages sent
     public void sendMessage(int myId, Message message){
-        Random rand = new Random();
-        int transmissionTime =   rand.nextInt(10)+1;
-        try {
-            TimeUnit.MILLISECONDS.sleep(transmissionTime);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        output.get(myId).add(message);
-
+        message.sendMessage();
+        output.get(myId).add(message); //sends messages
         //nummessages ++
         counter.getAndIncrement();
     }
 
+    //we return any ready messages
     public Message getMessage(int myId){
-        Message message = input.get(myId).poll();
-        return message;
+        Message message = input.get(myId).peek();
+        if(message != null && message.isReady())
+            return input.get(myId).poll();
+        else
+            return null;
     }
 
     //used to flag a connection as a parent edge so that we don't send duplicate messages

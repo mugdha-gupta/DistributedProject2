@@ -21,7 +21,7 @@ public class Floodmax {
 //            return;
 //        }
 
-        File file = new File("C:\\Users\\Nymisha\\IdeaProjects\\DistributedProject2\\src\\input.dat");
+        File file = new File("C:\\Users\\mugdh\\gitviews\\DistributedProject2\\src\\input.dat");
         neighborhood = getNeighborhood(file); //get the neighbor map
         connections = createConnections(neighborhood); //get connections map from neighbor map
         initializeThreads(connections); //initialize all threads
@@ -85,15 +85,14 @@ public class Floodmax {
             threads[i] = new MyThread3(id, connections.get(id), barrier, latch); //create a thread, this will also start the thread
             i++;
         }
-        while (latch.getCount() > 0) {
-            barrierAwait(barrier);
-        }
-        barrierAwait(barrier);
+
+        barrierAwait(barrier, numThreads);
+
 
         return;
     }
 
-    private static void barrierAwait(CyclicBarrier barrier){
+    private static void barrierAwait(CyclicBarrier barrier, int numThreads){
         try {
             barrier.await();
         } catch (InterruptedException | BrokenBarrierException e) {
@@ -138,3 +137,4 @@ public class Floodmax {
     }
 
 }
+
