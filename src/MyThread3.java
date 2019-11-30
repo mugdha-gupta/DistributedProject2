@@ -40,6 +40,7 @@ class MyThread3 extends Thread {
     private HashSet<Connection> connectionsToSendMessagesTo;
 
     Boolean leaderFound = false;
+    int round = 0;
 
     MyThread3(int my_id, ArrayList<Connection> my_neighbors, CyclicBarrier my_barrier, CountDownLatch my_latch) {
         //initialize our class variables
@@ -64,13 +65,15 @@ class MyThread3 extends Thread {
     // After diam rounds, all threads will have the correct leader id as maxIdFound
     public void run() {
 
-        sendMessages(new Message(myId, myId, Message.INIT));
+        sendMessages(new Message(myId, myId, Message.INIT, round));
+
 
         while (!leaderFound) {
             connectionsLeftToReceiveFrom.addAll(connections);
             connectionsToSendMessagesTo.addAll(connections);
             receiveMessages(); //after this we should have a message from every connection
             processMessages();
+            round++;
         }
 
         try {
@@ -99,7 +102,8 @@ class MyThread3 extends Thread {
                 Message message = connection.getMessage(myId);
                 if (message != null) {
                     recievedMessages.put(connection, message);
-                    connectionsToRemove.add(connection);
+                    if(message.round == round)
+                        connectionsToRemove.add(connection);
                 }
             }
             for (Connection connection : connectionsToRemove) {
@@ -127,16 +131,17 @@ class MyThread3 extends Thread {
 
             for (Connection connection : recievedMessages.keySet()) {
                 Message message = recievedMessages.get(connection);
+                System.out.println(myId + " from: " + message.senderid + " type: " + message.type + " max: " + message.maxIdFound);
                 if (message.type == Message.INIT) {
                     if (maxIdFound < message.maxIdFound) {
                         maxIdFound = message.maxIdFound;
                         setParent(message.senderid, connection);
                         children.clear();
-                        sendMessages(new Message(myId, maxIdFound, Message.INIT));
+                        sendMessages(new Message(myId, maxIdFound, Message.INIT, round+1));
                         responseCounter = 0;
                     } else {
                         if (connection != null)
-                            sendResponse(new Message(myId, maxIdFound, Message.DECLINE), connection);
+                            sendResponse(new Message(myId, maxIdFound, Message.DECLINE, round+1), connection);
                     }
 
                 } else if (message.type == Message.ACCEPT) {
@@ -153,9 +158,10 @@ class MyThread3 extends Thread {
                 else if (message.type == Message.LEADER) {
 
                     if (maxIdFound == message.maxIdFound) {
-                        sendLeaderMessage(new Message(myId, maxIdFound, Message.LEADER));
-                    }
-                    else{
+                        sendLeaderMessage(new Message(myId, maxIdFound, Message.LEADER, round+1));
+                        break;
+                    } else{
+                        System.out.println(myId + " "+ maxIdFound);
                         System.out.println("this is wrong");
                     }
                 }
@@ -167,14 +173,17 @@ class MyThread3 extends Thread {
             connectionsToRemove.clear();
         }
 
+        if (leaderFound)
+            recievedMessages.clear();
         ackNack();
     }
 
     public void ackNack(){
+        System.out.println(myId + " parent: " + parent + " responseCounter: " + responseCounter );
         if (parent != -1 && responseCounter == connections.size()-1){
 
             if(setAck.add(this.maxIdFound)){
-                sendResponse(new Message(myId, maxIdFound, Message.ACCEPT), parentConnection);
+                sendResponse(new Message(myId, maxIdFound, Message.ACCEPT, round+1), parentConnection);
 
             }
             if(!isIncremented){
@@ -186,7 +195,7 @@ class MyThread3 extends Thread {
         }
         else if (parent == -1 && responseCounter == connections.size()){
             latch.countDown();
-            sendLeaderMessage(new Message(myId, maxIdFound, Message.LEADER));
+            sendLeaderMessage(new Message(myId, maxIdFound, Message.LEADER, round+1));
 
 
         }
@@ -218,16 +227,10 @@ class MyThread3 extends Thread {
 
     }
 
-    public void receiveLeaderMessage(Message message, Connection connection) {
-
-
-
-
-    }
 
     public void sendDummies() {
         for(Connection connection : connectionsToSendMessagesTo){
-            connection.sendMessage(myId, new Message(myId, maxIdFound, Message.DUMMY));
+            connection.sendMessage(myId, new Message(myId, maxIdFound, Message.DUMMY, round+1));
         }
         connectionsToSendMessagesTo.clear();
     }

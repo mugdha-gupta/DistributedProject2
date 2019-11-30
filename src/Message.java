@@ -16,15 +16,17 @@ public class Message {
     int maxIdFound;
     int type;
     int delay;
+    int round;
     LocalDateTime readyTime;
 
-    public Message(int id, int maxId, int type) {
+    public Message(int id, int maxId, int type, int round) {
         this.senderid = id;
         this.maxIdFound = maxId;
         this.type = type;
         Random rand = new Random();
         delay = rand.nextInt(10)+1;
         readyTime = null;
+        this.round = round;
     }
 
     public void sendMessage(){
