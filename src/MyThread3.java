@@ -157,13 +157,14 @@ class MyThread3 extends Thread {
                 }
                 else if (message.type == Message.LEADER) {
 
-                    if (maxIdFound == message.maxIdFound) {
-                        sendLeaderMessage(new Message(myId, maxIdFound, Message.LEADER, round+1));
-                        break;
-                    } else{
-                        System.out.println(myId + " "+ maxIdFound);
-                        System.out.println("this is wrong");
-                    }
+                    maxIdFound = message.maxIdFound;
+                    //if (maxIdFound == message.maxIdFound) {
+                    sendLeaderMessage(new Message(myId, maxIdFound, Message.LEADER, round+1));
+                    break;
+//                    } else{
+//                        System.out.println(myId + " "+ maxIdFound);
+//                        System.out.println("this is wrong");
+//                    }
                 }
 
                 connectionsToRemove.add(connection);
@@ -229,10 +230,12 @@ class MyThread3 extends Thread {
 
 
     public void sendDummies() {
-        for(Connection connection : connectionsToSendMessagesTo){
-            connection.sendMessage(myId, new Message(myId, maxIdFound, Message.DUMMY, round+1));
+        if(!leaderFound) {
+            for (Connection connection : connectionsToSendMessagesTo) {
+                connection.sendMessage(myId, new Message(myId, maxIdFound, Message.DUMMY, round + 1));
+            }
+            connectionsToSendMessagesTo.clear();
         }
-        connectionsToSendMessagesTo.clear();
     }
 
 
