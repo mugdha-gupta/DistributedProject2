@@ -8,6 +8,7 @@ class MyThread3 extends Thread {
     public final int INIT = 0;
     public final int ACCEPT = 1;
     public final int DECLINE = 2;
+    public final int DUMMY = 3;
 
     // tells us when processes have sent an acknowledge message
     public CountDownLatch latch;
@@ -39,7 +40,9 @@ class MyThread3 extends Thread {
 
     CyclicBarrier barrier;
 
-
+    // messages we've received from
+    HashSet<Connection> connectionsLeftToReceiveFrom;
+    HashSet<Connection> connectionsToSendMessagesTo;
 
     public MyThread3(int my_id, ArrayList<Connection> my_neighbors, CyclicBarrier my_barrier, CountDownLatch my_latch) {
         //initialize our class variables
@@ -53,6 +56,8 @@ class MyThread3 extends Thread {
         latch = my_latch;
         setAck = new HashSet<>();
         barrier = my_barrier;
+        connectionsLeftToReceiveFrom = new HashSet<>();
+        connectionsToSendMessagesTo = new HashSet<>();
         //start from within constructor so main thread never has to call it
         start();
     }
@@ -65,24 +70,19 @@ class MyThread3 extends Thread {
         sendMessages(new Message(myId, myId, INIT));
 
         while (latch.getCount() > 0) {
+            connectionsLeftToReceiveFrom.addAll(connections);
+            connectionsToSendMessagesTo.addAll(connections);
+            receiveMessages(); //after this we should have a message from every connection
             processMessages();
-            try {
-                barrier.await(); // At the end of the node's phases, it calls await on the cb which stops the node until the next round.
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (BrokenBarrierException e) {
-                e.printStackTrace();
-            }
         }
+
         try {
-            barrier.await(); // At the end of the node's phases, it calls await on the cb which stops the node until the next round.
+            barrier.await();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (BrokenBarrierException e) {
             e.printStackTrace();
         }
-        System.out.println(myId + "completed ");
-
 
         System.out.println("Thread: " + myId + "\tLeader found: " + maxIdFound);
         if(parent == -1){
@@ -99,11 +99,21 @@ class MyThread3 extends Thread {
     //check all the connections to see fi any messages have been sent to this thread
     //if there is a message, add it to the list of messages we need to process
     public void receiveMessages() {
-        for (Connection connection : connections) {
-            Message message = connection.getMessage(myId);
-            if (message != null) {
-                recievedMessages.put(connection, message);
+        HashSet<Connection> connectionsToRemove = new HashSet<>();
+        while(true) {
+            for (Connection connection : connectionsLeftToReceiveFrom) {
+                Message message = connection.getMessage(myId);
+                if (message != null) {
+                    recievedMessages.put(connection, message);
+                    connectionsToRemove.add(connection);
+                }
             }
+            for (Connection connection : connectionsToRemove) {
+                connectionsLeftToReceiveFrom.remove(connection);
+            }
+            connectionsToRemove.clear();
+            if(connectionsLeftToReceiveFrom.isEmpty())
+                break;
         }
     }
 
@@ -118,20 +128,17 @@ class MyThread3 extends Thread {
     //we use response counter to make sure all our children have responded to our message as received
 
     public void processMessages() {
-        receiveMessages();
         if(!recievedMessages.isEmpty()) {
             HashSet<Connection> connectionsToRemove = new HashSet<>();
 
             for (Connection connection : recievedMessages.keySet()) {
                 Message message = recievedMessages.get(connection);
-                //System.out.println(myId + " from: " + message.senderid + " type: " + message.type + "  cur max: " + maxIdFound + " message max: " + message.maxIdFound);
                 if (message.type == INIT) {
                     if (maxIdFound < message.maxIdFound) {
                         maxIdFound = message.maxIdFound;
                         setParent(message.senderid, connection);
                         children.clear();
                         sendMessages(new Message(myId, maxIdFound, INIT));
-                        //sendResponse(new Message(myId, maxIdFound, ACCEPT), connection);
                         responseCounter = 0;
                     } else {
                         if (connection != null)
@@ -142,7 +149,6 @@ class MyThread3 extends Thread {
                     if (maxIdFound == message.maxIdFound) {
                         responseCounter++;
                         children.add(message.senderid);
-                        System.out.println(myId + "'s new child is " + message.senderid);
                     }
 
                 } else if (message.type == DECLINE) {
@@ -162,10 +168,9 @@ class MyThread3 extends Thread {
     }
 
     public void ackNack(){
-        if (parent != -1 && responseCounter >= connections.size()-1){
+        if (parent != -1 && responseCounter == connections.size()-1){
 
             if(setAck.add(this.maxIdFound)){
-                System.out.println(myId +"-->"+ parent +" MAX="+ maxIdFound);
                 sendResponse(new Message(myId, maxIdFound, ACCEPT), parentConnection);
 
             }
@@ -177,10 +182,10 @@ class MyThread3 extends Thread {
 
         }
         else if (parent == -1 && responseCounter == connections.size()){
-
-            System.out.println(myId +"I'm the leader!!");
             latch.countDown();
         }
+
+        sendDummies();
     }
 
     //find every edge connected to this node and send the given message down the connection
@@ -188,17 +193,25 @@ class MyThread3 extends Thread {
         for (Connection connection : connections) {
             if (!connection.isParentConnection(myId)) {
                 connection.sendMessage(myId, message);
+                connectionsToSendMessagesTo.remove(connection);
                 messagesSent++;
             }
         }
     }
 
+    public void sendDummies() {
+        for(Connection connection : connectionsToSendMessagesTo){
+            connection.sendMessage(myId, new Message(myId, maxIdFound, DUMMY));
+        }
+        connectionsToSendMessagesTo.clear();
+    }
 
 
     //send the given message to the specific node down the specified connection
     public void sendResponse(Message message, Connection connection) {
         if (connection != null) {
             connection.sendMessage(myId, message);
+            connectionsToSendMessagesTo.remove(connection);
         }
     }
 
@@ -215,8 +228,6 @@ class MyThread3 extends Thread {
                 conn.removeParent();
         }
         connection.hasParent(myId);
-
-        System.out.println(myId + "'s parent is " + parent + " max: " + maxIdFound);
     }
 
 }

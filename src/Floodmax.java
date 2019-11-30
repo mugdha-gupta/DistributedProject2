@@ -85,17 +85,14 @@ public class Floodmax {
             threads[i] = new MyThread3(id, connections.get(id), barrier, latch); //create a thread, this will also start the thread
             i++;
         }
-        while (latch.getCount() > 0) {
-            barrierAwait(barrier);
-            System.out.println('1');
-        }
-        System.out.println('2');
-        barrierAwait(barrier);
+
+        barrierAwait(barrier, numThreads);
+
 
         return;
     }
 
-    private static void barrierAwait(CyclicBarrier barrier){
+    private static void barrierAwait(CyclicBarrier barrier, int numThreads){
         try {
             barrier.await();
         } catch (InterruptedException | BrokenBarrierException e) {
